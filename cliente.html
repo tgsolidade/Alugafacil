@@ -14,6 +14,7 @@
         .header h2 { margin: 5px 0; }
         .header p { margin: 0; font-size: 14px; opacity: 0.9; }
         .container { max-width: 600px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-grow: 1; width: 90%; box-sizing: border-box; }
+        .nome-contrato-destaque { text-align: center; color: #0056b3; margin-top: 0; margin-bottom: 20px; font-size: 18px; word-break: break-all;}
         .pdf-container { width: 100%; height: 400px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 25px; background-color: #eaeaea; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-direction: column; }
         iframe { width: 100%; height: 100%; border: none; }
         .erro-msg { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; text-align: center; font-weight: bold; padding: 20px; border-radius: 4px; word-wrap: break-word; }
@@ -50,6 +51,7 @@
         <div class="pdf-container" id="loadingNuven"><span id="buscandoDoc">Buscando documento na nuvem... ☁️</span></div>
 
         <div id="areaAssinatura">
+            <h3 id="nomeContratoDisplay" class="nome-contrato-destaque"></h3>
             <p>Leia atentamente o documento abaixo antes de prosseguir com a assinatura.</p>
             <div class="pdf-container" id="pdfViewer"></div>
 
@@ -101,6 +103,7 @@
 
         let contratoOriginalBase64 = "";
         let idContratoGlobal = "";
+        let nomeArquivoGlobal = "Contrato.pdf"; // Nome padrão
 
         function exibirErroDetalhado(mensagem) {
             document.getElementById('loadingNuven').style.display = 'none';
@@ -122,13 +125,20 @@
                         const dadosDoBanco = snapshot.val();
                         if (!dadosDoBanco.pdf) { exibirErroDetalhado("Arquivo de PDF está vazio na nuvem."); return; }
                         
-                        // Trava extra: Se já foi assinado, avisa o cliente.
                         if (dadosDoBanco.status === 'assinado') {
                             exibirErroDetalhado("Este contrato já foi assinado e finalizado.");
                             return;
                         }
 
                         contratoOriginalBase64 = dadosDoBanco.pdf;
+                        
+                        // Resgata o nome bonito que definimos no painel admin
+                        if (dadosDoBanco.nomeArquivo) {
+                            nomeArquivoGlobal = dadosDoBanco.nomeArquivo;
+                        }
+                        // Mostra o nome do contrato para o cliente
+                        document.getElementById('nomeContratoDisplay').textContent = "📄 " + nomeArquivoGlobal;
+
                         document.getElementById('loadingNuven').style.display = 'none';
                         const pdfContainer = document.getElementById('pdfViewer');
                         pdfContainer.innerHTML = `<iframe src="${contratoOriginalBase64}#toolbar=0" title="Contrato PDF"></iframe>`;
@@ -220,31 +230,32 @@
                 page.drawText('Selfie segurando a CNH:', { x: 350, y: 580, size: 12 });
                 page.drawImage(imgSelfie2, { x: 350, y: 575 - maxDimSelfie2.height, width: maxDimSelfie2.width, height: maxDimSelfie2.height });
 
-                // GERA O NOVO PDF ASSINADO EM BASE64
                 const pdfBytesAssinado = await pdfDoc.saveAsBase64({ dataUri: true });
 
-                // SALVA DE VOLTA NO FIREBASE
                 await database.ref('contratos/' + idContratoGlobal).update({
                     status: 'assinado',
                     dataAssinatura: new Date().toISOString(),
                     pdfAssinado: pdfBytesAssinado
                 });
 
-                // FAZ O DOWNLOAD NO CELULAR DO CLIENTE
+                // Tira o .pdf do nome original para colocar o _assinado
+                let nomeDownloadBase = nomeArquivoGlobal;
+                if(nomeDownloadBase.toLowerCase().endsWith('.pdf')) {
+                    nomeDownloadBase = nomeDownloadBase.substring(0, nomeDownloadBase.length - 4);
+                }
+                const nomeFinalDownload = `${nomeDownloadBase}_assinado.pdf`;
+
                 const pdfBytesPuros = await pdfDoc.save();
                 const blob = new Blob([pdfBytesPuros], { type: "application/pdf" });
                 const linkDownload = document.createElement('a');
                 linkDownload.href = URL.createObjectURL(blob);
-                linkDownload.download = "Contrato_Assinado.pdf";
+                linkDownload.download = nomeFinalDownload;
                 linkDownload.click(); 
 
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('btnFinalizar').disabled = false;
                 
-                // MUDAMOS A MENSAGEM DO ALERT AQUI
                 alert("✅ Documento assinado com sucesso!\n\nEle foi baixado no seu celular e uma cópia já foi enviada automaticamente para o sistema da Aluga Fácil.");
-
-                // Após dar OK no alert, podemos esconder o formulário e mostrar uma tela de sucesso
                 document.getElementById('areaAssinatura').innerHTML = "<div style='text-align:center; padding: 40px;'><h2 style='color:#28a745;'>Obrigado!</h2><p>Seu contrato foi assinado e finalizado com segurança.</p></div>";
 
             } catch (erro) {
