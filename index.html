@@ -16,7 +16,7 @@
             color: #333;
             display: flex;
             flex-direction: column;
-            min-height: 100vh; /* Garante que o rodapé fique no fundo */
+            min-height: 100vh;
         }
         .header {
             background-color: #0056b3;
@@ -24,16 +24,10 @@
             padding: 20px;
             text-align: center;
         }
-        .header h1 {
-            margin: 5px 0;
-        }
-        .header p {
-            margin: 0;
-            font-size: 14px;
-            opacity: 0.9;
-        }
+        .header h1 { margin: 5px 0; }
+        .header p { margin: 0; font-size: 14px; opacity: 0.9; }
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 40px auto;
             background: #fff;
             padding: 30px;
@@ -42,113 +36,49 @@
             flex-grow: 1;
             width: 90%;
         }
-        .form-group {
-            margin-bottom: 25px;
-        }
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #444;
-        }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; font-weight: bold; margin-bottom: 10px; color: #444; }
         .file-upload-wrapper {
-            border: 2px dashed #0056b3;
-            padding: 30px;
-            text-align: center;
-            border-radius: 6px;
-            background-color: #f9fbff;
-            cursor: pointer;
-            transition: background-color 0.3s;
+            border: 2px dashed #0056b3; padding: 30px; text-align: center;
+            border-radius: 6px; background-color: #f9fbff; cursor: pointer; transition: 0.3s;
         }
-        .file-upload-wrapper:hover {
-            background-color: #eef4ff;
-        }
-        input[type="file"] {
-            display: none;
-        }
+        .file-upload-wrapper:hover { background-color: #eef4ff; }
+        input[type="file"] { display: none; }
         .custom-file-upload {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #0056b3;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-bottom: 10px;
+            display: inline-block; padding: 10px 20px; background-color: #0056b3;
+            color: white; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px;
         }
-        #fileName {
-            display: block;
-            margin-top: 10px;
-            font-style: italic;
-            color: #666;
-        }
+        #fileName { display: block; margin-top: 10px; font-style: italic; color: #666; }
         .btn {
-            width: 100%;
-            padding: 15px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
+            width: 100%; padding: 15px; background-color: #28a745; color: white;
+            border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
-        .btn:hover {
-            background-color: #218838;
-        }
-        .btn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
+        .btn:hover { background-color: #218838; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        .btn-blue { background-color: #17a2b8; margin-bottom: 15px; }
+        .btn-blue:hover { background-color: #138496; }
         .result-box {
-            display: none;
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #e9ecef;
-            border-left: 5px solid #28a745;
-            border-radius: 4px;
+            display: none; margin-top: 30px; padding: 20px; background-color: #e9ecef;
+            border-left: 5px solid #28a745; border-radius: 4px;
         }
         .link-display {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #fff;
-            box-sizing: border-box;
-            font-family: monospace;
-            font-size: 14px;
+            width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ccc;
+            border-radius: 4px; background-color: #fff; box-sizing: border-box; font-family: monospace; font-size: 14px;
         }
-        .copy-btn {
-            margin-top: 10px;
-            padding: 10px 15px;
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        #loadingAdmin {
-            display: none;
-            text-align: center;
-            color: #0056b3;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-        .footer {
-            text-align: center;
-            padding: 20px;
-            background-color: #333;
-            color: #fff;
-            font-size: 12px;
-            line-height: 1.6;
-            margin-top: auto;
-        }
-        .footer a {
-            color: #17a2b8;
-            text-decoration: none;
-        }
+        .copy-btn { margin-top: 10px; padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #loadingAdmin { display: none; text-align: center; color: #0056b3; font-weight: bold; margin-top: 15px; }
+        
+        /* Estilos da nova Tabela de Gestão */
+        .section-divider { border-top: 2px solid #eee; margin: 40px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f4f4f9; color: #333; }
+        .status-pendente { color: #dc3545; font-weight: bold; }
+        .status-assinado { color: #28a745; font-weight: bold; }
+        .btn-download { background-color: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-decoration: none;}
+        .btn-download:hover { background-color: #0056b3; }
+
+        .footer { text-align: center; padding: 20px; background-color: #333; color: #fff; font-size: 12px; line-height: 1.6; margin-top: auto; }
     </style>
 </head>
 <body>
@@ -160,10 +90,9 @@
 
     <div class="container">
         <h2>Novo Contrato</h2>
-        <p>Anexe o documento em PDF para gerar o link de assinatura do cliente.</p>
+        <p>Anexe o documento base em PDF para gerar o link do cliente.</p>
 
         <div class="form-group">
-            <label>1. Anexar Arquivo (Apenas PDF)</label>
             <div class="file-upload-wrapper" onclick="document.getElementById('pdfUpload').click()">
                 <input type="file" id="pdfUpload" accept="application/pdf" onchange="mostrarNomeArquivo()">
                 <span class="custom-file-upload">Escolher arquivo PDF</span>
@@ -175,10 +104,33 @@
         <div id="loadingAdmin">Enviando documento para a nuvem... Aguarde! ⏳</div>
 
         <div class="result-box" id="resultBox">
-            <label>2. Link gerado com sucesso!</label>
-            <p>Envie este link para o cliente acessar a jornada de assinatura:</p>
+            <label>Link gerado com sucesso!</label>
             <input type="text" id="generatedLink" class="link-display" readonly>
             <button class="copy-btn" onclick="copiarLink()">Copiar Link</button>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <h2>Gestão de Contratos</h2>
+        <p>Veja os contratos gerados e baixe os que já foram assinados.</p>
+        <button class="btn btn-blue" onclick="carregarContratos()">🔄 Atualizar Lista de Contratos</button>
+
+        <div style="overflow-x: auto;">
+            <table id="tabelaContratos">
+                <thead>
+                    <tr>
+                        <th>Data de Criação</th>
+                        <th>ID / Link</th>
+                        <th>Status</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela">
+                    <tr>
+                        <td colspan="4" style="text-align: center;">Clique em "Atualizar Lista" para buscar os contratos.</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -210,18 +162,10 @@
 
             if (input.files && input.files.length > 0) {
                 const arquivo = input.files[0];
-                
                 if (arquivo.type !== 'application/pdf') {
-                    alert('Erro: Por favor, selecione apenas arquivos no formato PDF.');
-                    input.value = ''; 
-                    fileNameDisplay.textContent = 'Nenhum arquivo selecionado';
-                    btnGerar.disabled = true;
-                    return;
+                    alert('Erro: Selecione apenas arquivos em PDF.');
+                    input.value = ''; fileNameDisplay.textContent = 'Nenhum arquivo selecionado'; btnGerar.disabled = true; return;
                 }
-
-                fileNameDisplay.textContent = "Processando arquivo: " + arquivo.name;
-                btnGerar.disabled = true;
-
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     pdfBase64 = e.target.result;
@@ -229,43 +173,36 @@
                     btnGerar.disabled = false; 
                 };
                 reader.readAsDataURL(arquivo);
-
-            } else {
-                fileNameDisplay.textContent = 'Nenhum arquivo selecionado';
-                btnGerar.disabled = true;
-                pdfBase64 = "";
             }
         }
 
         function gerarLink() {
-            if (!pdfBase64) {
-                alert('Aguarde o processamento do arquivo PDF.');
-                return;
-            }
-
+            if (!pdfBase64) return;
             document.getElementById('btnGerar').disabled = true;
             document.getElementById('loadingAdmin').style.display = 'block';
 
-            const idUnico = Math.random().toString(36).substring(2, 15);
+            const idUnico = Math.random().toString(36).substring(2, 10); // ID mais curto para ficar bonito na tabela
             
             database.ref('contratos/' + idUnico).set({
                 pdf: pdfBase64,
-                dataCriacao: new Date().toISOString()
+                dataCriacao: new Date().toISOString(),
+                status: 'pendente' // Novo campo de status
             }).then(() => {
                 document.getElementById('loadingAdmin').style.display = 'none';
                 
                 const urlAtual = window.location.pathname;
                 const diretorioBase = urlAtual.substring(0, urlAtual.lastIndexOf('/')) + '/';
                 const baseUrl = window.location.origin + diretorioBase;
-                
                 const linkFinal = baseUrl + "cliente.html?doc=" + idUnico;
 
                 document.getElementById('generatedLink').value = linkFinal;
                 document.getElementById('resultBox').style.display = 'block';
+                document.getElementById('btnGerar').disabled = false;
                 
+                // Recarrega a tabela automaticamente ao gerar um novo
+                carregarContratos();
             }).catch((erro) => {
-                console.error(erro);
-                alert("Erro ao conectar com o banco de dados. Verifique se as regras do Firebase estão liberadas.");
+                alert("Erro ao enviar. Verifique o console.");
                 document.getElementById('loadingAdmin').style.display = 'none';
                 document.getElementById('btnGerar').disabled = false;
             });
@@ -273,12 +210,82 @@
 
         function copiarLink() {
             const linkInput = document.getElementById('generatedLink');
-            linkInput.select();
-            linkInput.setSelectionRange(0, 99999);
-            document.execCommand("copy");
+            linkInput.select(); document.execCommand("copy");
             alert("Link copiado para a área de transferência!");
         }
-    </script>
 
+        // ==========================================
+        // NOVA FUNÇÃO: CARREGAR CONTRATOS DA NUVEM
+        // ==========================================
+        function carregarContratos() {
+            const corpoTabela = document.getElementById('corpoTabela');
+            corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center;">Buscando contratos... ⏳</td></tr>';
+
+            database.ref('contratos').once('value').then((snapshot) => {
+                if (!snapshot.exists()) {
+                    corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum contrato gerado ainda.</td></tr>';
+                    return;
+                }
+
+                const contratos = snapshot.val();
+                corpoTabela.innerHTML = ''; // Limpa a tabela
+                
+                // Pega as chaves (IDs) e inverte para mostrar os mais novos primeiro
+                const ids = Object.keys(contratos).reverse();
+
+                ids.forEach(id => {
+                    const contrato = contratos[id];
+                    
+                    // Formata a data para padrão brasileiro
+                    const dataObj = new Date(contrato.dataCriacao);
+                    const dataFormatada = dataObj.toLocaleDateString('pt-BR') + ' às ' + dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    
+                    const linha = document.createElement('tr');
+                    
+                    // Coluna Data
+                    const tdData = document.createElement('td');
+                    tdData.textContent = dataFormatada;
+                    
+                    // Coluna ID
+                    const tdId = document.createElement('td');
+                    tdId.textContent = id;
+                    
+                    // Coluna Status
+                    const tdStatus = document.createElement('td');
+                    if(contrato.status === 'assinado') {
+                        tdStatus.innerHTML = '<span class="status-assinado">Assinado ✅</span>';
+                    } else {
+                        tdStatus.innerHTML = '<span class="status-pendente">Aguardando Assinatura ⏳</span>';
+                    }
+
+                    // Coluna Ação
+                    const tdAcao = document.createElement('td');
+                    if(contrato.status === 'assinado' && contrato.pdfAssinado) {
+                        const btnDownload = document.createElement('a');
+                        btnDownload.href = contrato.pdfAssinado;
+                        btnDownload.download = `Contrato_Assinado_${id}.pdf`;
+                        btnDownload.className = 'btn-download';
+                        btnDownload.textContent = '📥 Baixar PDF Final';
+                        tdAcao.appendChild(btnDownload);
+                    } else {
+                        tdAcao.textContent = 'Aguardando cliente...';
+                        tdAcao.style.color = '#999';
+                        tdAcao.style.fontSize = '12px';
+                    }
+
+                    linha.appendChild(tdData);
+                    linha.appendChild(tdId);
+                    linha.appendChild(tdStatus);
+                    linha.appendChild(tdAcao);
+                    
+                    corpoTabela.appendChild(linha);
+                });
+
+            }).catch((erro) => {
+                corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Erro ao buscar contratos.</td></tr>';
+                console.error(erro);
+            });
+        }
+    </script>
 </body>
 </html>
