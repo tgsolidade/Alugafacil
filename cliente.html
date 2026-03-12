@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assinatura de Contrato</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .header {
+            background-color: #28a745;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .pdf-container {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            background-color: #eaeaea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .erro-msg {
+            color: #dc3545;
+            text-align: center;
+            font-weight: bold;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        input[type="text"], input[type="tel"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="file"] {
+            display: block;
+            margin-top: 5px;
+            width: 100%;
+        }
+        
+        .camera-container {
+            width: 100%;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #000;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        #videoSelfie {
+            width: 100%;
+            display: block;
+        }
+        .preview-container {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: #fff;
+        }
+        .preview-img {
+            width: 50%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: none;
+            height: auto; 
+        }
+        .btn-camera {
+            background-color: #17a2b8;
+            margin-top: 5px;
+            width: 100%;
+            padding: 12px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-camera-cnh {
+            background-color: #fd7e14;
+        }
+
+        .canvas-container {
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            margin-top: 10px;
+            background: #fafafa;
+        }
+        #signaturePad {
+            width: 100%;
+            height: 200px;
+            touch-action: none;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .btn-clear {
+            background-color: #dc3545;
+            margin-top: 5px;
+            padding: 10px;
+        }
+        #areaAssinatura {
+            display: none;
+        }
+        #loadingMsg {
+            display: none;
+            text-align: center;
+            color: #0056b3;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Revisão e Assinatura</h2>
+    </div>
+
+    <div class="container">
+        
+        <div id="mensagemErro" class="erro-msg" style="display: none;">
+            ⚠️ Link de contrato inválido ou expirado.
+        </div>
+
+        <div id="areaAssinatura">
+            <p>Leia atentamente o documento abaixo antes de prosseguir com a assinatura.</p>
+            
+            <div class="pdf-container" id="pdfViewer">
+                Carregando documento...
+            </div>
+
+            <h3>Dados para Validação</h3>
+
+            <div class="form-group">
+                <label>Foto da CNH (Frente)</label>
+                <input type="file" accept="image/*" capture="environment" id="docFrente" required>
+            </div>
+
+            <div class="form-group">
+                <label>Foto da CNH (Verso)</label>
+                <input type="file" accept="image/*" capture="environment" id="docVerso" required>
+            </div>
+
+            <div class="form-group">
+                <label>Selfies de Segurança</label>
+                <p style="font-size: 14px; color: #666; margin-top: 0;">Você precisará tirar duas fotos para comprovação de identidade.</p>
+                
+                <div class="camera-container">
+                    <video id="videoSelfie" autoplay playsinline></video>
+                    
+                    <div class="preview-container" id="previewArea" style="display: none;">
+                        <img id="imgSelfieNormal" class="preview-img" alt="Selfie Normal">
+                        <img id="imgSelfieCNH" class="preview-img" alt="Selfie com CNH">
+                    </div>
+                    
+                    <canvas id="canvasSelfie" style="display: none;"></canvas>
+                </div>
+
+                <button type="button" class="btn-camera" id="btnTirarNormal" onclick="tirarSelfieNormal()">📸 1. Tirar Selfie do Rosto</button>
+                <button type="button" class="btn-camera btn-camera-cnh" id="btnTirarCNH" onclick="tirarSelfieCNH()">📸 2. Tirar Selfie segurando a CNH</button>
+                <button type="button" class="btn btn-clear" id="btnRefazerFoto" style="display:none;" onclick="reiniciarCamera()">🔄 Refazer Fotos</button>
+            </div>
+
+            <div class="form-group">
+                <label>Sua Assinatura Digital</label>
+                <div class="canvas-container">
+                    <canvas id="signaturePad"></canvas>
+                </div>
+                <button class="btn btn-clear" onclick="limparAssinatura()">Limpar Desenho</button>
+            </div>
+
+            <button class="btn" id="btnFinalizar" onclick="finalizarProcesso()">Assinar e Baixar Contrato</button>
+            <div id="loadingMsg">Processando documento... Aguarde! ⏳</div>
+        </div>
+
+    </div>
+
+    <script>
+        let contratoOriginalBase64 = "";
+
+        window.onload = function() {
+            const parametrosDaUrl = new URLSearchParams(window.location.search);
+            const idContrato = parametrosDaUrl.get('doc');
+
+            if (!idContrato) {
+                mostrarErro();
+                return;
+            }
+
+            contratoOriginalBase64 = localStorage.getItem('contrato_' + idContrato);
+
+            if (contratoOriginalBase64) {
+                const pdfContainer = document.getElementById('pdfViewer');
+                pdfContainer.innerHTML = `<iframe src="${contratoOriginalBase64}#toolbar=0" title="Contrato PDF"></iframe>`;
+                document.getElementById('areaAssinatura').style.display = 'block';
+                
+                setTimeout(resizeCanvas, 100); 
+                iniciarCamera();
+            } else {
+                mostrarErro();
+            }
+        };
+
+        function mostrarErro() {
+            document.getElementById('mensagemErro').style.display = 'block';
+            document.getElementById('areaAssinatura').style.display = 'none';
+        }
+
+        const video = document.getElementById('videoSelfie');
+        const canvasCamera = document.getElementById('canvasSelfie');
+        const previewArea = document.getElementById('previewArea');
+        const imgSelfieNormal = document.getElementById('imgSelfieNormal');
+        const imgSelfieCNH = document.getElementById('imgSelfieCNH');
+        
+        const btnTirarNormal = document.getElementById('btnTirarNormal');
+        const btnTirarCNH = document.getElementById('btnTirarCNH');
+        const btnRefazer = document.getElementById('btnRefazerFoto');
+        
+        let streamCamera = null;
+        let selfieNormalBase64 = null;
+        let selfieCNHBase64 = null;
+
+        async function iniciarCamera() {
+            try {
+                streamCamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = streamCamera;
+                video.style.display = 'block';
+                
+                previewArea.style.display = 'none';
+                imgSelfieNormal.style.display = 'none';
+                imgSelfieCNH.style.display = 'none';
+                
+                btnTirarNormal.style.display = 'block';
+                btnTirarCNH.style.display = 'block';
+                btnRefazer.style.display = 'none';
+                
+                selfieNormalBase64 = null;
+                selfieCNHBase64 = null;
+            } catch (err) {
+                console.error("Erro na câmera:", err);
+                alert("Permita o acesso à câmera para tirar as fotos de segurança.");
+            }
+        }
+
+        function capturarFrame() {
+            canvasCamera.width = video.videoWidth;
+            canvasCamera.height = video.videoHeight;
+            const ctxCamera = canvasCamera.getContext('2d');
+            ctxCamera.drawImage(video, 0, 0, canvasCamera.width, canvasCamera.height);
+            return canvasCamera.toDataURL('image/png');
+        }
+
+        function checarCameraEncerrada() {
+            if (selfieNormalBase64 && selfieCNHBase64) {
+                video.style.display = 'none';
+                btnRefazer.style.display = 'block';
+                if (streamCamera) {
+                    streamCamera.getTracks().forEach(track => track.stop());
+                }
+            }
+        }
+
+        function tirarSelfieNormal() {
+            if (!streamCamera) return;
+            selfieNormalBase64 = capturarFrame();
+            
+            imgSelfieNormal.src = selfieNormalBase64;
+            previewArea.style.display = 'flex';
+            imgSelfieNormal.style.display = 'block';
+            
+            btnTirarNormal.style.display = 'none';
+            checarCameraEncerrada();
+        }
+
+        function tirarSelfieCNH() {
+            if (!streamCamera) return;
+            selfieCNHBase64 = capturarFrame();
+            
+            imgSelfieCNH.src = selfieCNHBase64;
+            previewArea.style.display = 'flex';
+            imgSelfieCNH.style.display = 'block';
+            
+            btnTirarCNH.style.display = 'none';
+            checarCameraEncerrada();
+        }
+
+        function reiniciarCamera() {
+            iniciarCamera();
+        }
+
+        const canvas = document.getElementById('signaturePad');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            ctx.scale(ratio, ratio);
+        }
+
+        function getCoordinates(e) {
+            if (e.touches && e.touches.length > 0) {
+                return { x: e.touches[0].clientX - canvas.getBoundingClientRect().left, y: e.touches[0].clientY - canvas.getBoundingClientRect().top };
+            }
+            return { x: e.clientX - canvas.getBoundingClientRect().left, y: e.clientY - canvas.getBoundingClientRect().top };
+        }
+
+        function startDrawing(e) { isDrawing = true; const coords = getCoordinates(e); lastX = coords.x; lastY = coords.y; }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault(); 
+            const coords = getCoordinates(e);
+            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(coords.x, coords.y);
+            ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+            lastX = coords.x; lastY = coords.y;
+        }
+
+        function stopDrawing() { isDrawing = false; }
+
+        canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); canvas.addEventListener('touchend', stopDrawing);
+
+        function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        function isCanvasBlank(c) { const blank = document.createElement('canvas'); blank.width = c.width; blank.height = c.height; return c.toDataURL() === blank.toDataURL(); }
+
+        function lerArquivoComoArrayBuffer(arquivo) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(arquivo);
+            });
+        }
+
+        async function finalizarProcesso() {
+            const docFrenteFile = document.getElementById('docFrente').files[0];
+            const docVersoFile = document.getElementById('docVerso').files[0];
+            
+            if (!docFrenteFile || !docVersoFile) {
+                alert("Por favor, anexe as fotos da frente e do verso da CNH.");
+                return;
+            }
+            if (!selfieNormalBase64 || !selfieCNHBase64) {
+                alert("Por favor, tire as DUAS selfies de segurança.");
+                return;
+            }
+            if (isCanvasBlank(canvas)) {
+                alert("Por favor, faça sua assinatura.");
+                return;
+            }
+
+            document.getElementById('btnFinalizar').disabled = true;
+            document.getElementById('loadingMsg').style.display = 'block';
+
+            try {
+                const { PDFDocument } = PDFLib;
+
+                const pdfDataUri = contratoOriginalBase64;
+                const pdfDoc = await PDFDocument.load(pdfDataUri);
+
+                const assinaturaImage = await pdfDoc.embedPng(canvas.toDataURL('image/png'));
+                const imgSelfie1 = await pdfDoc.embedPng(selfieNormalBase64);
+                const imgSelfie2 = await pdfDoc.embedPng(selfieCNHBase64);
+
+                const frenteBuffer = await lerArquivoComoArrayBuffer(docFrenteFile);
+                const versoBuffer = await lerArquivoComoArrayBuffer(docVersoFile);
+                
+                const embedImagemFile = async (buffer) => {
+                    try { return await pdfDoc.embedJpg(buffer); } 
+                    catch (e) { return await pdfDoc.embedPng(buffer); }
+                };
+
+                const imgFrente = await embedImagemFile(frenteBuffer);
+                const imgVerso = await embedImagemFile(versoBuffer);
+
+                const page = pdfDoc.addPage([595, 842]); 
+                
+                page.drawText('Anexos de Assinatura Digital (Validação KYC)', { x: 50, y: 800, size: 16 });
+                
+                // MÁGICA ACONTECE AQUI: scaleToFit mantém a proporção perfeita!
+                const maxDimAssinatura = assinaturaImage.scaleToFit(250, 80);
+                const maxDimFrente = imgFrente.scaleToFit(200, 140);
+                const maxDimVerso = imgVerso.scaleToFit(200, 140);
+                const maxDimSelfie1 = imgSelfie1.scaleToFit(150, 150);
+                const maxDimSelfie2 = imgSelfie2.scaleToFit(150, 150);
+
+                // --- Lado Esquerdo (Assinatura e CNH) ---
+                page.drawText('Assinatura Digital:', { x: 50, y: 760, size: 12 });
+                page.drawImage(assinaturaImage, { 
+                    x: 50, y: 755 - maxDimAssinatura.height, 
+                    width: maxDimAssinatura.width, height: maxDimAssinatura.height 
+                });
+
+                page.drawText('CNH (Frente):', { x: 50, y: 640, size: 12 });
+                page.drawImage(imgFrente, { 
+                    x: 50, y: 635 - maxDimFrente.height, 
+                    width: maxDimFrente.width, height: maxDimFrente.height 
+                });
+
+                page.drawText('CNH (Verso):', { x: 50, y: 470, size: 12 });
+                page.drawImage(imgVerso, { 
+                    x: 50, y: 465 - maxDimVerso.height, 
+                    width: maxDimVerso.width, height: maxDimVerso.height 
+                });
+
+                // --- Lado Direito (Selfies) ---
+                page.drawText('Selfie (Rosto):', { x: 350, y: 760, size: 12 });
+                page.drawImage(imgSelfie1, { 
+                    x: 350, y: 755 - maxDimSelfie1.height, 
+                    width: maxDimSelfie1.width, height: maxDimSelfie1.height 
+                });
+
+                page.drawText('Selfie segurando a CNH:', { x: 350, y: 580, size: 12 });
+                page.drawImage(imgSelfie2, { 
+                    x: 350, y: 575 - maxDimSelfie2.height, 
+                    width: maxDimSelfie2.width, height: maxDimSelfie2.height 
+                });
+
+                const pdfBytes = await pdfDoc.save();
+
+                const blob = new Blob([pdfBytes], { type: "application/pdf" });
+                const linkDownload = document.createElement('a');
+                linkDownload.href = URL.createObjectURL(blob);
+                linkDownload.download = "Contrato_Assinado.pdf";
+                linkDownload.click(); 
+
+                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('btnFinalizar').disabled = false;
+
+                alert("✅ Documento assinado e baixado com sucesso!\n\nPor favor, envie o arquivo 'Contrato_Assinado.pdf' que acabou de baixar para o nosso WhatsApp para concluirmos.");
+
+            } catch (erro) {
+                console.error("Erro ao gerar PDF:", erro);
+                alert("Ocorreu um erro ao gerar o documento. Tente novamente com fotos mais leves.");
+                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('btnFinalizar').disabled = false;
+            }
+        }
+    </script>
+
+</body>
+</html>
