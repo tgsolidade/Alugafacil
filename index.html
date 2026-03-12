@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel - Aluga Fácil</title>
+    <title>Painel Admin - Gerar Contrato</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -113,6 +116,13 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        #loadingAdmin {
+            display: none;
+            text-align: center;
+            color: #0056b3;
+            font-weight: bold;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -136,6 +146,7 @@
         </div>
 
         <button class="btn" id="btnGerar" onclick="gerarLink()" disabled>Gerar Link de Assinatura</button>
+        <div id="loadingAdmin">Enviando documento para a nuvem... Aguarde! ⏳</div>
 
         <div class="result-box" id="resultBox">
             <label>2. Link gerado com sucesso!</label>
@@ -146,6 +157,24 @@
     </div>
 
     <script>
+        // ==========================================
+        // SUAS CHAVES DO FIREBASE
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAY4YPwEixyQy38GZTG3i4y9Ri3j0uNJ3A",
+            authDomain: "asscontrato-6b307.firebaseapp.com",
+            databaseURL: "https://asscontrato-6b307-default-rtdb.firebaseio.com", // Adicionado o endereço do banco
+            projectId: "asscontrato-6b307",
+            storageBucket: "asscontrato-6b307.firebasestorage.app",
+            messagingSenderId: "34485243367",
+            appId: "1:34485243367:web:401a10d9c756e15ab38142",
+            measurementId: "G-BPT7ZT6QT2"
+        };
+        // Inicializa o Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        // ==========================================
+
         let pdfBase64 = "";
 
         function mostrarNomeArquivo() {
@@ -160,15 +189,6 @@
                     alert('Erro: Por favor, selecione apenas arquivos no formato PDF.');
                     input.value = ''; 
                     fileNameDisplay.textContent = 'Nenhum arquivo selecionado';
-                    btnGerar.disabled = true;
-                    return;
-                }
-
-                const tamanhoMaximo = 2.5 * 1024 * 1024;
-                if (arquivo.size > tamanhoMaximo) {
-                    alert('Aviso: Para este teste local sem banco de dados, escolha um PDF menor que 2.5MB. No sistema final não haverá este limite.');
-                    input.value = '';
-                    fileNameDisplay.textContent = 'Arquivo muito grande para o teste local.';
                     btnGerar.disabled = true;
                     return;
                 }
@@ -191,33 +211,27 @@
             }
         }
 
-        function limparTestesAntigos() {
-            const chavesParaRemover = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('contrato_')) {
-                    chavesParaRemover.push(key);
-                }
-            }
-            chavesParaRemover.forEach(chave => localStorage.removeItem(chave));
-        }
-
         function gerarLink() {
             if (!pdfBase64) {
                 alert('Aguarde o processamento do arquivo PDF.');
                 return;
             }
 
-            limparTestesAntigos();
+            // Trava os botões enquanto sobe para a nuvem
+            document.getElementById('btnGerar').disabled = true;
+            document.getElementById('loadingAdmin').style.display = 'block';
 
             const idUnico = Math.random().toString(36).substring(2, 15);
             
-            try {
-                localStorage.setItem('contrato_' + idUnico, pdfBase64);
+            // Enviando o PDF para o Realtime Database do Firebase
+            database.ref('contratos/' + idUnico).set({
+                pdf: pdfBase64,
+                dataCriacao: new Date().toISOString()
+            }).then(() => {
+                // Sucesso ao enviar para a nuvem!
+                document.getElementById('loadingAdmin').style.display = 'none';
                 
-                // NOVA LÓGICA DE GERAÇÃO DE LINK À PROVA DE FALHAS
                 const urlAtual = window.location.pathname;
-                // Pega tudo até a última barra "/", removendo qualquer nome de arquivo atual
                 const diretorioBase = urlAtual.substring(0, urlAtual.lastIndexOf('/')) + '/';
                 const baseUrl = window.location.origin + diretorioBase;
                 
@@ -226,10 +240,12 @@
                 document.getElementById('generatedLink').value = linkFinal;
                 document.getElementById('resultBox').style.display = 'block';
                 
-            } catch (erro) {
+            }).catch((erro) => {
                 console.error(erro);
-                alert("Erro: A memória do seu navegador está cheia. Tente usar um PDF com menos páginas ou sem imagens pesadas apenas para este teste.");
-            }
+                alert("Erro ao conectar com o banco de dados. Verifique se as regras do Firebase estão liberadas.");
+                document.getElementById('loadingAdmin').style.display = 'none';
+                document.getElementById('btnGerar').disabled = false;
+            });
         }
 
         function copiarLink() {
