@@ -164,8 +164,7 @@
                     return;
                 }
 
-                // TRAVA DE TAMANHO PARA O TESTE LOCAL (Max 2.5MB)
-                const tamanhoMaximo = 2.5 * 1024 * 1024; // 2.5MB em bytes
+                const tamanhoMaximo = 2.5 * 1024 * 1024;
                 if (arquivo.size > tamanhoMaximo) {
                     alert('Aviso: Para este teste local sem banco de dados, escolha um PDF menor que 2.5MB. No sistema final não haverá este limite.');
                     input.value = '';
@@ -193,7 +192,6 @@
         }
 
         function limparTestesAntigos() {
-            // Varre a memória e apaga contratos antigos para liberar espaço
             const chavesParaRemover = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -210,24 +208,25 @@
                 return;
             }
 
-            // 1. Limpa o navegador antes de salvar o novo PDF
             limparTestesAntigos();
 
             const idUnico = Math.random().toString(36).substring(2, 15);
             
             try {
-                // 2. Tenta salvar na memória do navegador
                 localStorage.setItem('contrato_' + idUnico, pdfBase64);
                 
-                // 3. Se deu certo, gera e mostra o link
-                const baseUrl = window.location.origin + window.location.pathname.replace('admn.html', '');
+                // NOVA LÓGICA DE GERAÇÃO DE LINK À PROVA DE FALHAS
+                const urlAtual = window.location.pathname;
+                // Pega tudo até a última barra "/", removendo qualquer nome de arquivo atual
+                const diretorioBase = urlAtual.substring(0, urlAtual.lastIndexOf('/')) + '/';
+                const baseUrl = window.location.origin + diretorioBase;
+                
                 const linkFinal = baseUrl + "cliente.html?doc=" + idUnico;
 
                 document.getElementById('generatedLink').value = linkFinal;
                 document.getElementById('resultBox').style.display = 'block';
                 
             } catch (erro) {
-                // 4. Captura o QuotaExceededError na tela caso ainda falhe
                 console.error(erro);
                 alert("Erro: A memória do seu navegador está cheia. Tente usar um PDF com menos páginas ou sem imagens pesadas apenas para este teste.");
             }
@@ -243,5 +242,4 @@
     </script>
 
 </body>
-
 </html>
