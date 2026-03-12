@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Gerar Contrato</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .header {
+            background-color: #0056b3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #444;
+        }
+        .file-upload-wrapper {
+            border: 2px dashed #0056b3;
+            padding: 30px;
+            text-align: center;
+            border-radius: 6px;
+            background-color: #f9fbff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .file-upload-wrapper:hover {
+            background-color: #eef4ff;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .custom-file-upload {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #0056b3;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        #fileName {
+            display: block;
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result-box {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-left: 5px solid #28a745;
+            border-radius: 4px;
+        }
+        .link-display {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .copy-btn {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Painel de Administração</h1>
+        <p>Sistema de Assinaturas</p>
+    </div>
+
+    <div class="container">
+        <h2>Novo Contrato</h2>
+        <p>Anexe o documento em PDF para gerar o link de assinatura do cliente.</p>
+
+        <div class="form-group">
+            <label>1. Anexar Arquivo (Apenas PDF)</label>
+            <div class="file-upload-wrapper" onclick="document.getElementById('pdfUpload').click()">
+                <input type="file" id="pdfUpload" accept="application/pdf" onchange="mostrarNomeArquivo()">
+                <span class="custom-file-upload">Escolher arquivo PDF</span>
+                <span id="fileName">Nenhum arquivo selecionado</span>
+            </div>
+        </div>
+
+        <button class="btn" id="btnGerar" onclick="gerarLink()" disabled>Gerar Link de Assinatura</button>
+
+        <div class="result-box" id="resultBox">
+            <label>2. Link gerado com sucesso!</label>
+            <p>Envie este link para o cliente acessar a jornada de assinatura:</p>
+            <input type="text" id="generatedLink" class="link-display" readonly>
+            <button class="copy-btn" onclick="copiarLink()">Copiar Link</button>
+        </div>
+    </div>
+
+    <script>
+        let pdfBase64 = "";
+
+        function mostrarNomeArquivo() {
+            const input = document.getElementById('pdfUpload');
+            const fileNameDisplay = document.getElementById('fileName');
+            const btnGerar = document.getElementById('btnGerar');
+
+            if (input.files && input.files.length > 0) {
+                const arquivo = input.files[0];
+                
+                if (arquivo.type !== 'application/pdf') {
+                    alert('Erro: Por favor, selecione apenas arquivos no formato PDF.');
+                    input.value = ''; 
+                    fileNameDisplay.textContent = 'Nenhum arquivo selecionado';
+                    btnGerar.disabled = true;
+                    return;
+                }
+
+                // TRAVA DE TAMANHO PARA O TESTE LOCAL (Max 2.5MB)
+                const tamanhoMaximo = 2.5 * 1024 * 1024; // 2.5MB em bytes
+                if (arquivo.size > tamanhoMaximo) {
+                    alert('Aviso: Para este teste local sem banco de dados, escolha um PDF menor que 2.5MB. No sistema final não haverá este limite.');
+                    input.value = '';
+                    fileNameDisplay.textContent = 'Arquivo muito grande para o teste local.';
+                    btnGerar.disabled = true;
+                    return;
+                }
+
+                fileNameDisplay.textContent = "Processando arquivo: " + arquivo.name;
+                btnGerar.disabled = true;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pdfBase64 = e.target.result;
+                    fileNameDisplay.textContent = "Arquivo pronto: " + arquivo.name;
+                    btnGerar.disabled = false; 
+                };
+                reader.readAsDataURL(arquivo);
+
+            } else {
+                fileNameDisplay.textContent = 'Nenhum arquivo selecionado';
+                btnGerar.disabled = true;
+                pdfBase64 = "";
+            }
+        }
+
+        function limparTestesAntigos() {
+            // Varre a memória e apaga contratos antigos para liberar espaço
+            const chavesParaRemover = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('contrato_')) {
+                    chavesParaRemover.push(key);
+                }
+            }
+            chavesParaRemover.forEach(chave => localStorage.removeItem(chave));
+        }
+
+        function gerarLink() {
+            if (!pdfBase64) {
+                alert('Aguarde o processamento do arquivo PDF.');
+                return;
+            }
+
+            // 1. Limpa o navegador antes de salvar o novo PDF
+            limparTestesAntigos();
+
+            const idUnico = Math.random().toString(36).substring(2, 15);
+            
+            try {
+                // 2. Tenta salvar na memória do navegador
+                localStorage.setItem('contrato_' + idUnico, pdfBase64);
+                
+                // 3. Se deu certo, gera e mostra o link
+                const baseUrl = window.location.origin + window.location.pathname.replace('admn.html', '');
+                const linkFinal = baseUrl + "cliente.html?doc=" + idUnico;
+
+                document.getElementById('generatedLink').value = linkFinal;
+                document.getElementById('resultBox').style.display = 'block';
+                
+            } catch (erro) {
+                // 4. Captura o QuotaExceededError na tela caso ainda falhe
+                console.error(erro);
+                alert("Erro: A memória do seu navegador está cheia. Tente usar um PDF com menos páginas ou sem imagens pesadas apenas para este teste.");
+            }
+        }
+
+        function copiarLink() {
+            const linkInput = document.getElementById('generatedLink');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert("Link copiado para a área de transferência!");
+        }
+    </script>
+
+</body>
+</html>
