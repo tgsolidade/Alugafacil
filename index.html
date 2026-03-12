@@ -80,7 +80,7 @@
         
         /* Botões da Tabela */
         .btn-download, .btn-excluir { 
-            color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-decoration: none; display: inline-block; margin-right: 5px; margin-top: 5px;
+            color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-decoration: none; display: inline-block; margin-right: 5px; margin-top: 5px; font-family: inherit;
         }
         .btn-download { background-color: #007bff; }
         .btn-download:hover { background-color: #0056b3; }
@@ -250,7 +250,6 @@
             alert("Link copiado para a área de transferência!");
         }
 
-        // FUNÇÃO PARA EXCLUIR O CONTRATO
         function excluirContrato(idContrato) {
             const confirmacao = confirm("Tem certeza que deseja excluir este contrato permanentemente? Esta ação não pode ser desfeita e liberará espaço no seu banco de dados.");
             
@@ -258,13 +257,35 @@
                 database.ref('contratos/' + idContrato).remove()
                 .then(() => {
                     alert("Contrato excluído com sucesso!");
-                    carregarContratos(); // Recarrega a tabela para sumir com o contrato deletado
+                    carregarContratos();
                 })
                 .catch((erro) => {
                     console.error("Erro ao excluir:", erro);
                     alert("Ocorreu um erro ao excluir o contrato.");
                 });
             }
+        }
+
+        // NOVA LÓGICA DE DOWNLOAD SEGURO
+        function baixarPdfSeguro(base64String, nomeDoArquivo) {
+            // Converte o Base64 pesado num Blob para o navegador não travar o link
+            fetch(base64String)
+                .then(res => res.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = nomeDoArquivo;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(erro => {
+                    console.error(erro);
+                    alert("Ocorreu um erro ao processar o arquivo para download.");
+                });
         }
 
         function carregarContratos() {
@@ -304,23 +325,24 @@
                         tdStatus.innerHTML = '<span class="status-pendente">Aguardando ⏳</span>';
                     }
 
-                    // Coluna de Ações (Download + Excluir)
                     const tdAcao = document.createElement('td');
                     const divAcao = document.createElement('div');
                     divAcao.className = 'acao-container';
 
                     if(contrato.status === 'assinado' && contrato.pdfAssinado) {
-                        const btnDownload = document.createElement('a');
-                        btnDownload.href = contrato.pdfAssinado;
+                        const btnDownload = document.createElement('button'); // Mudamos de <a> para <button>
                         
                         let nomeDownloadBase = contrato.nomeArquivo ? contrato.nomeArquivo : `Contrato_${id}.pdf`;
                         if(nomeDownloadBase.toLowerCase().endsWith('.pdf')) {
                             nomeDownloadBase = nomeDownloadBase.substring(0, nomeDownloadBase.length - 4);
                         }
-                        btnDownload.download = `${nomeDownloadBase}_assinado.pdf`;
+                        const nomeFinalDownload = `${nomeDownloadBase}_assinado.pdf`;
                         
                         btnDownload.className = 'btn-download';
                         btnDownload.textContent = '📥 Baixar PDF';
+                        // Aciona a nova função de download seguro
+                        btnDownload.onclick = function() { baixarPdfSeguro(contrato.pdfAssinado, nomeFinalDownload); };
+                        
                         divAcao.appendChild(btnDownload);
                     } else {
                         const spanAguardando = document.createElement('span');
@@ -331,7 +353,6 @@
                         divAcao.appendChild(spanAguardando);
                     }
 
-                    // Botão de Excluir sempre presente
                     const btnExcluir = document.createElement('button');
                     btnExcluir.className = 'btn-excluir';
                     btnExcluir.textContent = '🗑️ Excluir';
