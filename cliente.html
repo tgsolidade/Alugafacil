@@ -3,218 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assinatura de Contrato</title>
+    <title>Aluga Fácil - Assinatura de Contrato</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-            color: #333;
-        }
-        .header {
-            background-color: #28a745;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .pdf-container {
-            width: 100%;
-            height: 400px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 25px;
-            background-color: #eaeaea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex-direction: column;
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .erro-msg {
-            color: #dc3545;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            text-align: center;
-            font-weight: bold;
-            padding: 20px;
-            border-radius: 4px;
-            word-wrap: break-word; /* Garante que o texto de erro não quebre a tela */
-        }
-        .form-group {
-            margin-bottom: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        input[type="text"], input[type="tel"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        input[type="file"] {
-            display: block;
-            margin-top: 5px;
-            width: 100%;
-        }
-        .camera-container {
-            width: 100%;
-            border: 2px solid #ccc;
-            border-radius: 4px;
-            overflow: hidden;
-            background: #000;
-            position: relative;
-            margin-bottom: 10px;
-        }
-        #videoSelfie {
-            width: 100%;
-            display: block;
-        }
-        .preview-container {
-            display: flex;
-            gap: 10px;
-            padding: 10px;
-            background: #fff;
-        }
-        .preview-img {
-            width: 50%;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            display: none;
-            height: auto; 
-        }
-        .btn-camera {
-            background-color: #17a2b8;
-            margin-top: 5px;
-            width: 100%;
-            padding: 12px;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .btn-camera-cnh {
-            background-color: #fd7e14;
-        }
-        .canvas-container {
-            border: 2px dashed #ccc;
-            border-radius: 4px;
-            margin-top: 10px;
-            background: #fafafa;
-        }
-        #signaturePad {
-            width: 100%;
-            height: 200px;
-            touch-action: none;
-        }
-        .btn {
-            width: 100%;
-            padding: 15px;
-            background-color: #0056b3;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background-color 0.3s;
-        }
-        .btn:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-        .btn-clear {
-            background-color: #dc3545;
-            margin-top: 5px;
-            padding: 10px;
-        }
-        #areaAssinatura {
-            display: none;
-        }
-        #loadingMsg {
-            display: none;
-            text-align: center;
-            color: #0056b3;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-        #buscandoDoc {
-            font-weight: bold;
-            color: #0056b3;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { background-color: #28a745; color: white; padding: 20px; text-align: center; }
+        .header h2 { margin: 5px 0; }
+        .header p { margin: 0; font-size: 14px; opacity: 0.9; }
+        .container { max-width: 600px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-grow: 1; width: 90%; box-sizing: border-box; }
+        .pdf-container { width: 100%; height: 400px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 25px; background-color: #eaeaea; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-direction: column; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .erro-msg { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; text-align: center; font-weight: bold; padding: 20px; border-radius: 4px; word-wrap: break-word; }
+        .form-group { margin-bottom: 20px; padding-top: 15px; border-top: 1px solid #eee; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; }
+        input[type="text"], input[type="tel"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input[type="file"] { display: block; margin-top: 5px; width: 100%; }
+        .camera-container { width: 100%; border: 2px solid #ccc; border-radius: 4px; overflow: hidden; background: #000; position: relative; margin-bottom: 10px; }
+        #videoSelfie { width: 100%; display: block; }
+        .preview-container { display: flex; gap: 10px; padding: 10px; background: #fff; }
+        .preview-img { width: 50%; border: 1px solid #ccc; border-radius: 4px; display: none; height: auto; }
+        .btn-camera { background-color: #17a2b8; margin-top: 5px; width: 100%; padding: 12px; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-camera-cnh { background-color: #fd7e14; }
+        .canvas-container { border: 2px dashed #ccc; border-radius: 4px; margin-top: 10px; background: #fafafa; }
+        #signaturePad { width: 100%; height: 200px; touch-action: none; }
+        .btn { width: 100%; padding: 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+        .btn:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .btn-clear { background-color: #dc3545; margin-top: 5px; padding: 10px; }
+        #areaAssinatura { display: none; }
+        #loadingMsg { display: none; text-align: center; color: #0056b3; font-weight: bold; margin-top: 15px; }
+        #buscandoDoc { font-weight: bold; color: #0056b3; }
+        .footer { text-align: center; padding: 20px; background-color: #333; color: #fff; font-size: 12px; line-height: 1.6; margin-top: auto; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>Revisão e Assinatura</h2>
+        <h2>Aluga Fácil</h2>
+        <p>Revisão e Assinatura de Contrato</p>
     </div>
 
     <div class="container">
-        
         <div id="mensagemErro" class="erro-msg" style="display: none;"></div>
-
-        <div class="pdf-container" id="loadingNuven">
-            <span id="buscandoDoc">Buscando documento na nuvem... ☁️</span>
-        </div>
+        <div class="pdf-container" id="loadingNuven"><span id="buscandoDoc">Buscando documento na nuvem... ☁️</span></div>
 
         <div id="areaAssinatura">
             <p>Leia atentamente o documento abaixo antes de prosseguir com a assinatura.</p>
-            
             <div class="pdf-container" id="pdfViewer"></div>
 
             <h3>Dados para Validação</h3>
-
-            <div class="form-group">
-                <label>Foto da CNH (Frente)</label>
-                <input type="file" accept="image/*" capture="environment" id="docFrente" required>
-            </div>
-
-            <div class="form-group">
-                <label>Foto da CNH (Verso)</label>
-                <input type="file" accept="image/*" capture="environment" id="docVerso" required>
-            </div>
+            <div class="form-group"><label>Foto da CNH (Frente)</label><input type="file" accept="image/*" capture="environment" id="docFrente" required></div>
+            <div class="form-group"><label>Foto da CNH (Verso)</label><input type="file" accept="image/*" capture="environment" id="docVerso" required></div>
 
             <div class="form-group">
                 <label>Selfies de Segurança</label>
                 <p style="font-size: 14px; color: #666; margin-top: 0;">Você precisará tirar duas fotos para comprovação de identidade.</p>
-                
                 <div class="camera-container">
                     <video id="videoSelfie" autoplay playsinline></video>
-                    
                     <div class="preview-container" id="previewArea" style="display: none;">
-                        <img id="imgSelfieNormal" class="preview-img" alt="Selfie Normal">
-                        <img id="imgSelfieCNH" class="preview-img" alt="Selfie com CNH">
+                        <img id="imgSelfieNormal" class="preview-img"><img id="imgSelfieCNH" class="preview-img">
                     </div>
-                    
                     <canvas id="canvasSelfie" style="display: none;"></canvas>
                 </div>
-
                 <button type="button" class="btn-camera" id="btnTirarNormal" onclick="tirarSelfieNormal()">📸 1. Tirar Selfie do Rosto</button>
                 <button type="button" class="btn-camera btn-camera-cnh" id="btnTirarCNH" onclick="tirarSelfieCNH()">📸 2. Tirar Selfie segurando a CNH</button>
                 <button type="button" class="btn btn-clear" id="btnRefazerFoto" style="display:none;" onclick="reiniciarCamera()">🔄 Refazer Fotos</button>
@@ -222,22 +74,18 @@
 
             <div class="form-group">
                 <label>Sua Assinatura Digital</label>
-                <div class="canvas-container">
-                    <canvas id="signaturePad"></canvas>
-                </div>
+                <div class="canvas-container"><canvas id="signaturePad"></canvas></div>
                 <button class="btn btn-clear" onclick="limparAssinatura()">Limpar Desenho</button>
             </div>
 
-            <button class="btn" id="btnFinalizar" onclick="finalizarProcesso()">Assinar e Baixar Contrato</button>
-            <div id="loadingMsg">Processando documento... Aguarde! ⏳</div>
+            <button class="btn" id="btnFinalizar" onclick="finalizarProcesso()">Assinar e Enviar Contrato</button>
+            <div id="loadingMsg">Processando documento e salvando na nuvem... Aguarde! ⏳</div>
         </div>
-
     </div>
 
+    <div class="footer">Desenvolvido por <strong>TGSolidade</strong><br>&copy; Copyright 2026 - Aluga Fácil</div>
+
     <script>
-        // ==========================================
-        // SUAS CHAVES DO FIREBASE
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyAY4YPwEixyQy38GZTG3i4y9Ri3j0uNJ3A",
             authDomain: "asscontrato-6b307.firebaseapp.com",
@@ -250,11 +98,10 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        // ==========================================
 
         let contratoOriginalBase64 = "";
+        let idContratoGlobal = "";
 
-        // FUNÇÃO DE DIAGNÓSTICO DE ERRO APRIMORADA
         function exibirErroDetalhado(mensagem) {
             document.getElementById('loadingNuven').style.display = 'none';
             document.getElementById('areaAssinatura').style.display = 'none';
@@ -265,166 +112,76 @@
 
         window.onload = function() {
             const parametrosDaUrl = new URLSearchParams(window.location.search);
-            const idContrato = parametrosDaUrl.get('doc');
+            idContratoGlobal = parametrosDaUrl.get('doc');
 
-            if (!idContrato) {
-                exibirErroDetalhado("O link está incompleto. Falta o ID do contrato na URL.");
-                return;
-            }
+            if (!idContratoGlobal) { exibirErroDetalhado("O link está incompleto."); return; }
 
             try {
-                // Tenta buscar no Firebase
-                database.ref('contratos/' + idContrato).once('value').then((snapshot) => {
+                database.ref('contratos/' + idContratoGlobal).once('value').then((snapshot) => {
                     if (snapshot.exists()) {
                         const dadosDoBanco = snapshot.val();
+                        if (!dadosDoBanco.pdf) { exibirErroDetalhado("Arquivo de PDF está vazio na nuvem."); return; }
                         
-                        // Verifica se o PDF veio vazio
-                        if (!dadosDoBanco.pdf) {
-                            exibirErroDetalhado("O contrato foi encontrado na nuvem, mas o arquivo de PDF está vazio ou corrompido.");
+                        // Trava extra: Se já foi assinado, avisa o cliente.
+                        if (dadosDoBanco.status === 'assinado') {
+                            exibirErroDetalhado("Este contrato já foi assinado e finalizado.");
                             return;
                         }
 
                         contratoOriginalBase64 = dadosDoBanco.pdf;
-                        
                         document.getElementById('loadingNuven').style.display = 'none';
                         const pdfContainer = document.getElementById('pdfViewer');
                         pdfContainer.innerHTML = `<iframe src="${contratoOriginalBase64}#toolbar=0" title="Contrato PDF"></iframe>`;
                         document.getElementById('areaAssinatura').style.display = 'block';
-                        
-                        setTimeout(resizeCanvas, 100); 
-                        iniciarCamera();
-                    } else {
-                        exibirErroDetalhado("O documento ID '" + idContrato + "' não foi encontrado no Banco de Dados. Verifique se o envio (upload) foi concluído com sucesso.");
-                    }
-                }).catch((erro) => {
-                    console.error("Erro no Firebase:", erro);
-                    exibirErroDetalhado("Erro ao conectar com a nuvem do Firebase. Motivo: " + erro.message);
-                });
-            } catch (e) {
-                exibirErroDetalhado("Erro interno de execução do código: " + e.message);
-            }
+                        setTimeout(resizeCanvas, 100); iniciarCamera();
+                    } else { exibirErroDetalhado("Documento não encontrado no Banco de Dados."); }
+                }).catch((erro) => { exibirErroDetalhado("Erro de conexão: " + erro.message); });
+            } catch (e) { exibirErroDetalhado("Erro interno: " + e.message); }
         };
 
-        const video = document.getElementById('videoSelfie');
-        const canvasCamera = document.getElementById('canvasSelfie');
-        const previewArea = document.getElementById('previewArea');
-        const imgSelfieNormal = document.getElementById('imgSelfieNormal');
-        const imgSelfieCNH = document.getElementById('imgSelfieCNH');
+        const video = document.getElementById('videoSelfie'); const canvasCamera = document.getElementById('canvasSelfie');
+        const previewArea = document.getElementById('previewArea'); const imgSelfieNormal = document.getElementById('imgSelfieNormal');
+        const imgSelfieCNH = document.getElementById('imgSelfieCNH'); const btnTirarNormal = document.getElementById('btnTirarNormal');
+        const btnTirarCNH = document.getElementById('btnTirarCNH'); const btnRefazer = document.getElementById('btnRefazerFoto');
         
-        const btnTirarNormal = document.getElementById('btnTirarNormal');
-        const btnTirarCNH = document.getElementById('btnTirarCNH');
-        const btnRefazer = document.getElementById('btnRefazerFoto');
-        
-        let streamCamera = null;
-        let selfieNormalBase64 = null;
-        let selfieCNHBase64 = null;
+        let streamCamera = null; let selfieNormalBase64 = null; let selfieCNHBase64 = null;
 
         async function iniciarCamera() {
             try {
                 streamCamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                video.srcObject = streamCamera;
-                video.style.display = 'block';
-                
-                previewArea.style.display = 'none';
-                imgSelfieNormal.style.display = 'none';
-                imgSelfieCNH.style.display = 'none';
-                
-                btnTirarNormal.style.display = 'block';
-                btnTirarCNH.style.display = 'block';
-                btnRefazer.style.display = 'none';
-                
-                selfieNormalBase64 = null;
-                selfieCNHBase64 = null;
-            } catch (err) {
-                console.error("Erro na câmera:", err);
-                alert("Permita o acesso à câmera para tirar as fotos de segurança.");
-            }
+                video.srcObject = streamCamera; video.style.display = 'block'; previewArea.style.display = 'none';
+                imgSelfieNormal.style.display = 'none'; imgSelfieCNH.style.display = 'none';
+                btnTirarNormal.style.display = 'block'; btnTirarCNH.style.display = 'block'; btnRefazer.style.display = 'none';
+                selfieNormalBase64 = null; selfieCNHBase64 = null;
+            } catch (err) { alert("Permita o acesso à câmera para tirar as fotos de segurança."); }
         }
 
         function capturarFrame() {
-            canvasCamera.width = video.videoWidth;
-            canvasCamera.height = video.videoHeight;
-            const ctxCamera = canvasCamera.getContext('2d');
-            ctxCamera.drawImage(video, 0, 0, canvasCamera.width, canvasCamera.height);
+            canvasCamera.width = video.videoWidth; canvasCamera.height = video.videoHeight;
+            const ctxCamera = canvasCamera.getContext('2d'); ctxCamera.drawImage(video, 0, 0, canvasCamera.width, canvasCamera.height);
             return canvasCamera.toDataURL('image/png');
         }
 
-        function checarCameraEncerrada() {
-            if (selfieNormalBase64 && selfieCNHBase64) {
-                video.style.display = 'none';
-                btnRefazer.style.display = 'block';
-                if (streamCamera) {
-                    streamCamera.getTracks().forEach(track => track.stop());
-                }
-            }
-        }
-
-        function tirarSelfieNormal() {
-            if (!streamCamera) return;
-            selfieNormalBase64 = capturarFrame();
-            imgSelfieNormal.src = selfieNormalBase64;
-            previewArea.style.display = 'flex';
-            imgSelfieNormal.style.display = 'block';
-            btnTirarNormal.style.display = 'none';
-            checarCameraEncerrada();
-        }
-
-        function tirarSelfieCNH() {
-            if (!streamCamera) return;
-            selfieCNHBase64 = capturarFrame();
-            imgSelfieCNH.src = selfieCNHBase64;
-            previewArea.style.display = 'flex';
-            imgSelfieCNH.style.display = 'block';
-            btnTirarCNH.style.display = 'none';
-            checarCameraEncerrada();
-        }
-
+        function checarCameraEncerrada() { if (selfieNormalBase64 && selfieCNHBase64) { video.style.display = 'none'; btnRefazer.style.display = 'block'; if (streamCamera) streamCamera.getTracks().forEach(track => track.stop()); } }
+        function tirarSelfieNormal() { if (!streamCamera) return; selfieNormalBase64 = capturarFrame(); imgSelfieNormal.src = selfieNormalBase64; previewArea.style.display = 'flex'; imgSelfieNormal.style.display = 'block'; btnTirarNormal.style.display = 'none'; checarCameraEncerrada(); }
+        function tirarSelfieCNH() { if (!streamCamera) return; selfieCNHBase64 = capturarFrame(); imgSelfieCNH.src = selfieCNHBase64; previewArea.style.display = 'flex'; imgSelfieCNH.style.display = 'block'; btnTirarCNH.style.display = 'none'; checarCameraEncerrada(); }
         function reiniciarCamera() { iniciarCamera(); }
 
-        const canvas = document.getElementById('signaturePad');
-        const ctx = canvas.getContext('2d');
-        let isDrawing = false; let lastX = 0; let lastY = 0;
-
-        function resizeCanvas() {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            ctx.scale(ratio, ratio);
-        }
-
-        function getCoordinates(e) {
-            if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX - canvas.getBoundingClientRect().left, y: e.touches[0].clientY - canvas.getBoundingClientRect().top };
-            return { x: e.clientX - canvas.getBoundingClientRect().left, y: e.clientY - canvas.getBoundingClientRect().top };
-        }
-
+        const canvas = document.getElementById('signaturePad'); const ctx = canvas.getContext('2d'); let isDrawing = false; let lastX = 0; let lastY = 0;
+        function resizeCanvas() { const ratio = Math.max(window.devicePixelRatio || 1, 1); canvas.width = canvas.offsetWidth * ratio; canvas.height = canvas.offsetHeight * ratio; ctx.scale(ratio, ratio); }
+        function getCoordinates(e) { if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX - canvas.getBoundingClientRect().left, y: e.touches[0].clientY - canvas.getBoundingClientRect().top }; return { x: e.clientX - canvas.getBoundingClientRect().left, y: e.clientY - canvas.getBoundingClientRect().top }; }
         function startDrawing(e) { isDrawing = true; const coords = getCoordinates(e); lastX = coords.x; lastY = coords.y; }
-        function draw(e) {
-            if (!isDrawing) return; e.preventDefault(); const coords = getCoordinates(e);
-            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(coords.x, coords.y);
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
-            lastX = coords.x; lastY = coords.y;
-        }
+        function draw(e) { if (!isDrawing) return; e.preventDefault(); const coords = getCoordinates(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(coords.x, coords.y); ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke(); lastX = coords.x; lastY = coords.y; }
         function stopDrawing() { isDrawing = false; }
-
         canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseout', stopDrawing);
         canvas.addEventListener('touchstart', startDrawing, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); canvas.addEventListener('touchend', stopDrawing);
-
         function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
         function isCanvasBlank(c) { const blank = document.createElement('canvas'); blank.width = c.width; blank.height = c.height; return c.toDataURL() === blank.toDataURL(); }
-
-        function lerArquivoComoArrayBuffer(arquivo) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(arquivo);
-            });
-        }
+        function lerArquivoComoArrayBuffer(arquivo) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsArrayBuffer(arquivo); }); }
 
         async function finalizarProcesso() {
             const docFrenteFile = document.getElementById('docFrente').files[0];
             const docVersoFile = document.getElementById('docVerso').files[0];
-            
             if (!docFrenteFile || !docVersoFile) { alert("Anexe as fotos da frente e verso da CNH."); return; }
             if (!selfieNormalBase64 || !selfieCNHBase64) { alert("Tire as DUAS selfies de segurança."); return; }
             if (isCanvasBlank(canvas)) { alert("Faça sua assinatura."); return; }
@@ -434,18 +191,12 @@
 
             try {
                 const { PDFDocument } = PDFLib;
-                const pdfDataUri = contratoOriginalBase64;
-                const pdfDoc = await PDFDocument.load(pdfDataUri);
+                const pdfDoc = await PDFDocument.load(contratoOriginalBase64);
 
                 const assinaturaImage = await pdfDoc.embedPng(canvas.toDataURL('image/png'));
                 const imgSelfie1 = await pdfDoc.embedPng(selfieNormalBase64);
                 const imgSelfie2 = await pdfDoc.embedPng(selfieCNHBase64);
-
-                const embedImagemFile = async (buffer) => {
-                    try { return await pdfDoc.embedJpg(buffer); } 
-                    catch (e) { return await pdfDoc.embedPng(buffer); }
-                };
-
+                const embedImagemFile = async (buffer) => { try { return await pdfDoc.embedJpg(buffer); } catch (e) { return await pdfDoc.embedPng(buffer); } };
                 const imgFrente = await embedImagemFile(await lerArquivoComoArrayBuffer(docFrenteFile));
                 const imgVerso = await embedImagemFile(await lerArquivoComoArrayBuffer(docVersoFile));
 
@@ -460,21 +211,28 @@
 
                 page.drawText('Assinatura Digital:', { x: 50, y: 760, size: 12 });
                 page.drawImage(assinaturaImage, { x: 50, y: 755 - maxDimAssinatura.height, width: maxDimAssinatura.width, height: maxDimAssinatura.height });
-
                 page.drawText('CNH (Frente):', { x: 50, y: 640, size: 12 });
                 page.drawImage(imgFrente, { x: 50, y: 635 - maxDimFrente.height, width: maxDimFrente.width, height: maxDimFrente.height });
-
                 page.drawText('CNH (Verso):', { x: 50, y: 470, size: 12 });
                 page.drawImage(imgVerso, { x: 50, y: 465 - maxDimVerso.height, width: maxDimVerso.width, height: maxDimVerso.height });
-
                 page.drawText('Selfie (Rosto):', { x: 350, y: 760, size: 12 });
                 page.drawImage(imgSelfie1, { x: 350, y: 755 - maxDimSelfie1.height, width: maxDimSelfie1.width, height: maxDimSelfie1.height });
-
                 page.drawText('Selfie segurando a CNH:', { x: 350, y: 580, size: 12 });
                 page.drawImage(imgSelfie2, { x: 350, y: 575 - maxDimSelfie2.height, width: maxDimSelfie2.width, height: maxDimSelfie2.height });
 
-                const pdfBytes = await pdfDoc.save();
-                const blob = new Blob([pdfBytes], { type: "application/pdf" });
+                // GERA O NOVO PDF ASSINADO EM BASE64
+                const pdfBytesAssinado = await pdfDoc.saveAsBase64({ dataUri: true });
+
+                // SALVA DE VOLTA NO FIREBASE
+                await database.ref('contratos/' + idContratoGlobal).update({
+                    status: 'assinado',
+                    dataAssinatura: new Date().toISOString(),
+                    pdfAssinado: pdfBytesAssinado
+                });
+
+                // FAZ O DOWNLOAD NO CELULAR DO CLIENTE
+                const pdfBytesPuros = await pdfDoc.save();
+                const blob = new Blob([pdfBytesPuros], { type: "application/pdf" });
                 const linkDownload = document.createElement('a');
                 linkDownload.href = URL.createObjectURL(blob);
                 linkDownload.download = "Contrato_Assinado.pdf";
@@ -482,7 +240,12 @@
 
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('btnFinalizar').disabled = false;
-                alert("✅ Documento assinado e baixado com sucesso!");
+                
+                // MUDAMOS A MENSAGEM DO ALERT AQUI
+                alert("✅ Documento assinado com sucesso!\n\nEle foi baixado no seu celular e uma cópia já foi enviada automaticamente para o sistema da Aluga Fácil.");
+
+                // Após dar OK no alert, podemos esconder o formulário e mostrar uma tela de sucesso
+                document.getElementById('areaAssinatura').innerHTML = "<div style='text-align:center; padding: 40px;'><h2 style='color:#28a745;'>Obrigado!</h2><p>Seu contrato foi assinado e finalizado com segurança.</p></div>";
 
             } catch (erro) {
                 console.error("Erro ao gerar PDF:", erro);
