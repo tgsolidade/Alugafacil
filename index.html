@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel - Aluga Fácil</title>
+    <title>Aluga Fácil - Painel Admin</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
@@ -14,12 +14,23 @@
             padding: 0;
             background-color: #f4f4f9;
             color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Garante que o rodapé fique no fundo */
         }
         .header {
             background-color: #0056b3;
             color: white;
             padding: 20px;
             text-align: center;
+        }
+        .header h1 {
+            margin: 5px 0;
+        }
+        .header p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
         }
         .container {
             max-width: 600px;
@@ -28,6 +39,8 @@
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            flex-grow: 1;
+            width: 90%;
         }
         .form-group {
             margin-bottom: 25px;
@@ -123,13 +136,26 @@
             font-weight: bold;
             margin-top: 15px;
         }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #333;
+            color: #fff;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: auto;
+        }
+        .footer a {
+            color: #17a2b8;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>Painel de Administração</h1>
-        <p>Sistema de Assinaturas</p>
+        <h1>Aluga Fácil</h1>
+        <p>Painel de Administração</p>
     </div>
 
     <div class="container">
@@ -156,24 +182,24 @@
         </div>
     </div>
 
+    <div class="footer">
+        Desenvolvido por <strong>TGSolidade</strong><br>
+        &copy; Copyright 2026 - Aluga Fácil
+    </div>
+
     <script>
-        // ==========================================
-        // SUAS CHAVES DO FIREBASE
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyAY4YPwEixyQy38GZTG3i4y9Ri3j0uNJ3A",
             authDomain: "asscontrato-6b307.firebaseapp.com",
-            databaseURL: "https://asscontrato-6b307-default-rtdb.firebaseio.com", // Adicionado o endereço do banco
+            databaseURL: "https://asscontrato-6b307-default-rtdb.firebaseio.com",
             projectId: "asscontrato-6b307",
             storageBucket: "asscontrato-6b307.firebasestorage.app",
             messagingSenderId: "34485243367",
             appId: "1:34485243367:web:401a10d9c756e15ab38142",
             measurementId: "G-BPT7ZT6QT2"
         };
-        // Inicializa o Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        // ==========================================
 
         let pdfBase64 = "";
 
@@ -217,18 +243,15 @@
                 return;
             }
 
-            // Trava os botões enquanto sobe para a nuvem
             document.getElementById('btnGerar').disabled = true;
             document.getElementById('loadingAdmin').style.display = 'block';
 
             const idUnico = Math.random().toString(36).substring(2, 15);
             
-            // Enviando o PDF para o Realtime Database do Firebase
             database.ref('contratos/' + idUnico).set({
                 pdf: pdfBase64,
                 dataCriacao: new Date().toISOString()
             }).then(() => {
-                // Sucesso ao enviar para a nuvem!
                 document.getElementById('loadingAdmin').style.display = 'none';
                 
                 const urlAtual = window.location.pathname;
@@ -259,4 +282,3 @@
 
 </body>
 </html>
-
