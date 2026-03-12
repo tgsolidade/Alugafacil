@@ -77,8 +77,17 @@
         th { background-color: #f4f4f9; color: #333; }
         .status-pendente { color: #dc3545; font-weight: bold; }
         .status-assinado { color: #28a745; font-weight: bold; }
-        .btn-download { background-color: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-decoration: none; display: inline-block;}
+        
+        /* Botões da Tabela */
+        .btn-download, .btn-excluir { 
+            color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-decoration: none; display: inline-block; margin-right: 5px; margin-top: 5px;
+        }
+        .btn-download { background-color: #007bff; }
         .btn-download:hover { background-color: #0056b3; }
+        .btn-excluir { background-color: #dc3545; }
+        .btn-excluir:hover { background-color: #c82333; }
+        
+        .acao-container { display: flex; flex-wrap: wrap; align-items: center;}
 
         .footer { text-align: center; padding: 20px; background-color: #333; color: #fff; font-size: 12px; line-height: 1.6; margin-top: auto; }
     </style>
@@ -120,7 +129,7 @@
         <div class="section-divider"></div>
 
         <h2>Gestão de Contratos</h2>
-        <p>Veja os contratos gerados e baixe os que já foram assinados.</p>
+        <p>Veja os contratos gerados, baixe os assinados ou limpe o sistema.</p>
         <button class="btn btn-blue" onclick="carregarContratos()">🔄 Atualizar Lista de Contratos</button>
 
         <div style="overflow-x: auto;">
@@ -175,7 +184,7 @@
                     alert('Erro: Selecione apenas arquivos em PDF.');
                     input.value = ''; fileNameDisplay.textContent = 'Nenhum arquivo selecionado'; btnGerar.disabled = true; return;
                 }
-                nomeArquivoOriginal = arquivo.name; // Guarda o nome original do PDF
+                nomeArquivoOriginal = arquivo.name; 
                 
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -201,13 +210,12 @@
 
             const idUnico = Math.random().toString(36).substring(2, 10); 
             
-            // Substitui espaços por underline para ficar um nome de arquivo válido e bonito
             const nomeClienteFormatado = nomeCliente.replace(/\s+/g, '_');
             const nomeFinalDoContrato = `${nomeClienteFormatado}_${nomeArquivoOriginal}`;
             
             database.ref('contratos/' + idUnico).set({
                 pdf: pdfBase64,
-                nomeArquivo: nomeFinalDoContrato, // Salva o nome bonitinho na nuvem
+                nomeArquivo: nomeFinalDoContrato,
                 dataCriacao: new Date().toISOString(),
                 status: 'pendente' 
             }).then(() => {
@@ -222,7 +230,6 @@
                 document.getElementById('resultBox').style.display = 'block';
                 document.getElementById('btnGerar').disabled = false;
                 
-                // Limpa o formulário para o próximo
                 document.getElementById('nomeCliente').value = '';
                 document.getElementById('pdfUpload').value = '';
                 document.getElementById('fileName').textContent = 'Nenhum arquivo selecionado';
@@ -241,6 +248,23 @@
             const linkInput = document.getElementById('generatedLink');
             linkInput.select(); document.execCommand("copy");
             alert("Link copiado para a área de transferência!");
+        }
+
+        // FUNÇÃO PARA EXCLUIR O CONTRATO
+        function excluirContrato(idContrato) {
+            const confirmacao = confirm("Tem certeza que deseja excluir este contrato permanentemente? Esta ação não pode ser desfeita e liberará espaço no seu banco de dados.");
+            
+            if (confirmacao) {
+                database.ref('contratos/' + idContrato).remove()
+                .then(() => {
+                    alert("Contrato excluído com sucesso!");
+                    carregarContratos(); // Recarrega a tabela para sumir com o contrato deletado
+                })
+                .catch((erro) => {
+                    console.error("Erro ao excluir:", erro);
+                    alert("Ocorreu um erro ao excluir o contrato.");
+                });
+            }
         }
 
         function carregarContratos() {
@@ -270,7 +294,6 @@
                     tdData.textContent = dataFormatada;
                     
                     const tdIdentificacao = document.createElement('td');
-                    // Mostra o nome do arquivo que criamos, se não existir mostra o ID
                     const nomeExibicao = contrato.nomeArquivo ? contrato.nomeArquivo : `Contrato ID: ${id}`;
                     tdIdentificacao.innerHTML = `<strong>${nomeExibicao}</strong><br><small style="color:#888;">ID: ${id}</small>`;
                     
@@ -281,12 +304,15 @@
                         tdStatus.innerHTML = '<span class="status-pendente">Aguardando ⏳</span>';
                     }
 
+                    // Coluna de Ações (Download + Excluir)
                     const tdAcao = document.createElement('td');
+                    const divAcao = document.createElement('div');
+                    divAcao.className = 'acao-container';
+
                     if(contrato.status === 'assinado' && contrato.pdfAssinado) {
                         const btnDownload = document.createElement('a');
                         btnDownload.href = contrato.pdfAssinado;
                         
-                        // Define o nome de download baseado no status final
                         let nomeDownloadBase = contrato.nomeArquivo ? contrato.nomeArquivo : `Contrato_${id}.pdf`;
                         if(nomeDownloadBase.toLowerCase().endsWith('.pdf')) {
                             nomeDownloadBase = nomeDownloadBase.substring(0, nomeDownloadBase.length - 4);
@@ -294,13 +320,25 @@
                         btnDownload.download = `${nomeDownloadBase}_assinado.pdf`;
                         
                         btnDownload.className = 'btn-download';
-                        btnDownload.textContent = '📥 Baixar PDF Final';
-                        tdAcao.appendChild(btnDownload);
+                        btnDownload.textContent = '📥 Baixar PDF';
+                        divAcao.appendChild(btnDownload);
                     } else {
-                        tdAcao.textContent = 'Aguardando cliente...';
-                        tdAcao.style.color = '#999';
-                        tdAcao.style.fontSize = '12px';
+                        const spanAguardando = document.createElement('span');
+                        spanAguardando.textContent = 'Aguardando... ';
+                        spanAguardando.style.color = '#999';
+                        spanAguardando.style.fontSize = '12px';
+                        spanAguardando.style.marginRight = '10px';
+                        divAcao.appendChild(spanAguardando);
                     }
+
+                    // Botão de Excluir sempre presente
+                    const btnExcluir = document.createElement('button');
+                    btnExcluir.className = 'btn-excluir';
+                    btnExcluir.textContent = '🗑️ Excluir';
+                    btnExcluir.onclick = function() { excluirContrato(id); };
+                    divAcao.appendChild(btnExcluir);
+
+                    tdAcao.appendChild(divAcao);
 
                     linha.appendChild(tdData);
                     linha.appendChild(tdIdentificacao);
