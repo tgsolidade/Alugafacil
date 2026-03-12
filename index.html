@@ -38,6 +38,9 @@
         }
         .form-group { margin-bottom: 25px; }
         label { display: block; font-weight: bold; margin-bottom: 10px; color: #444; }
+        input[type="text"] {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px;
+        }
         .file-upload-wrapper {
             border: 2px dashed #0056b3; padding: 30px; text-align: center;
             border-radius: 6px; background-color: #f9fbff; cursor: pointer; transition: 0.3s;
@@ -68,14 +71,13 @@
         .copy-btn { margin-top: 10px; padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; }
         #loadingAdmin { display: none; text-align: center; color: #0056b3; font-weight: bold; margin-top: 15px; }
         
-        /* Estilos da nova Tabela de Gestão */
         .section-divider { border-top: 2px solid #eee; margin: 40px 0; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #f4f4f9; color: #333; }
         .status-pendente { color: #dc3545; font-weight: bold; }
         .status-assinado { color: #28a745; font-weight: bold; }
-        .btn-download { background-color: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-decoration: none;}
+        .btn-download { background-color: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-decoration: none; display: inline-block;}
         .btn-download:hover { background-color: #0056b3; }
 
         .footer { text-align: center; padding: 20px; background-color: #333; color: #fff; font-size: 12px; line-height: 1.6; margin-top: auto; }
@@ -90,9 +92,15 @@
 
     <div class="container">
         <h2>Novo Contrato</h2>
-        <p>Anexe o documento base em PDF para gerar o link do cliente.</p>
+        <p>Preencha os dados e anexe o PDF para gerar o link do cliente.</p>
 
         <div class="form-group">
+            <label>1. Nome do Cliente (Identificação)</label>
+            <input type="text" id="nomeCliente" placeholder="Ex: Carlos Silva" required>
+        </div>
+
+        <div class="form-group">
+            <label>2. Anexar Arquivo (Apenas PDF)</label>
             <div class="file-upload-wrapper" onclick="document.getElementById('pdfUpload').click()">
                 <input type="file" id="pdfUpload" accept="application/pdf" onchange="mostrarNomeArquivo()">
                 <span class="custom-file-upload">Escolher arquivo PDF</span>
@@ -119,8 +127,8 @@
             <table id="tabelaContratos">
                 <thead>
                     <tr>
-                        <th>Data de Criação</th>
-                        <th>ID / Link</th>
+                        <th>Data</th>
+                        <th>Identificação do Contrato</th>
                         <th>Status</th>
                         <th>Ação</th>
                     </tr>
@@ -154,6 +162,7 @@
         const database = firebase.database();
 
         let pdfBase64 = "";
+        let nomeArquivoOriginal = "";
 
         function mostrarNomeArquivo() {
             const input = document.getElementById('pdfUpload');
@@ -166,6 +175,8 @@
                     alert('Erro: Selecione apenas arquivos em PDF.');
                     input.value = ''; fileNameDisplay.textContent = 'Nenhum arquivo selecionado'; btnGerar.disabled = true; return;
                 }
+                nomeArquivoOriginal = arquivo.name; // Guarda o nome original do PDF
+                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     pdfBase64 = e.target.result;
@@ -177,16 +188,28 @@
         }
 
         function gerarLink() {
+            const nomeCliente = document.getElementById('nomeCliente').value.trim();
+            
+            if(!nomeCliente) {
+                alert("Por favor, preencha o Nome do Cliente.");
+                return;
+            }
             if (!pdfBase64) return;
+            
             document.getElementById('btnGerar').disabled = true;
             document.getElementById('loadingAdmin').style.display = 'block';
 
-            const idUnico = Math.random().toString(36).substring(2, 10); // ID mais curto para ficar bonito na tabela
+            const idUnico = Math.random().toString(36).substring(2, 10); 
+            
+            // Substitui espaços por underline para ficar um nome de arquivo válido e bonito
+            const nomeClienteFormatado = nomeCliente.replace(/\s+/g, '_');
+            const nomeFinalDoContrato = `${nomeClienteFormatado}_${nomeArquivoOriginal}`;
             
             database.ref('contratos/' + idUnico).set({
                 pdf: pdfBase64,
+                nomeArquivo: nomeFinalDoContrato, // Salva o nome bonitinho na nuvem
                 dataCriacao: new Date().toISOString(),
-                status: 'pendente' // Novo campo de status
+                status: 'pendente' 
             }).then(() => {
                 document.getElementById('loadingAdmin').style.display = 'none';
                 
@@ -199,7 +222,13 @@
                 document.getElementById('resultBox').style.display = 'block';
                 document.getElementById('btnGerar').disabled = false;
                 
-                // Recarrega a tabela automaticamente ao gerar um novo
+                // Limpa o formulário para o próximo
+                document.getElementById('nomeCliente').value = '';
+                document.getElementById('pdfUpload').value = '';
+                document.getElementById('fileName').textContent = 'Nenhum arquivo selecionado';
+                document.getElementById('btnGerar').disabled = true;
+                pdfBase64 = "";
+
                 carregarContratos();
             }).catch((erro) => {
                 alert("Erro ao enviar. Verifique o console.");
@@ -214,9 +243,6 @@
             alert("Link copiado para a área de transferência!");
         }
 
-        // ==========================================
-        // NOVA FUNÇÃO: CARREGAR CONTRATOS DA NUVEM
-        // ==========================================
         function carregarContratos() {
             const corpoTabela = document.getElementById('corpoTabela');
             corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center;">Buscando contratos... ⏳</td></tr>';
@@ -228,42 +254,45 @@
                 }
 
                 const contratos = snapshot.val();
-                corpoTabela.innerHTML = ''; // Limpa a tabela
+                corpoTabela.innerHTML = ''; 
                 
-                // Pega as chaves (IDs) e inverte para mostrar os mais novos primeiro
                 const ids = Object.keys(contratos).reverse();
 
                 ids.forEach(id => {
                     const contrato = contratos[id];
                     
-                    // Formata a data para padrão brasileiro
                     const dataObj = new Date(contrato.dataCriacao);
                     const dataFormatada = dataObj.toLocaleDateString('pt-BR') + ' às ' + dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                     
                     const linha = document.createElement('tr');
                     
-                    // Coluna Data
                     const tdData = document.createElement('td');
                     tdData.textContent = dataFormatada;
                     
-                    // Coluna ID
-                    const tdId = document.createElement('td');
-                    tdId.textContent = id;
+                    const tdIdentificacao = document.createElement('td');
+                    // Mostra o nome do arquivo que criamos, se não existir mostra o ID
+                    const nomeExibicao = contrato.nomeArquivo ? contrato.nomeArquivo : `Contrato ID: ${id}`;
+                    tdIdentificacao.innerHTML = `<strong>${nomeExibicao}</strong><br><small style="color:#888;">ID: ${id}</small>`;
                     
-                    // Coluna Status
                     const tdStatus = document.createElement('td');
                     if(contrato.status === 'assinado') {
                         tdStatus.innerHTML = '<span class="status-assinado">Assinado ✅</span>';
                     } else {
-                        tdStatus.innerHTML = '<span class="status-pendente">Aguardando Assinatura ⏳</span>';
+                        tdStatus.innerHTML = '<span class="status-pendente">Aguardando ⏳</span>';
                     }
 
-                    // Coluna Ação
                     const tdAcao = document.createElement('td');
                     if(contrato.status === 'assinado' && contrato.pdfAssinado) {
                         const btnDownload = document.createElement('a');
                         btnDownload.href = contrato.pdfAssinado;
-                        btnDownload.download = `Contrato_Assinado_${id}.pdf`;
+                        
+                        // Define o nome de download baseado no status final
+                        let nomeDownloadBase = contrato.nomeArquivo ? contrato.nomeArquivo : `Contrato_${id}.pdf`;
+                        if(nomeDownloadBase.toLowerCase().endsWith('.pdf')) {
+                            nomeDownloadBase = nomeDownloadBase.substring(0, nomeDownloadBase.length - 4);
+                        }
+                        btnDownload.download = `${nomeDownloadBase}_assinado.pdf`;
+                        
                         btnDownload.className = 'btn-download';
                         btnDownload.textContent = '📥 Baixar PDF Final';
                         tdAcao.appendChild(btnDownload);
@@ -274,7 +303,7 @@
                     }
 
                     linha.appendChild(tdData);
-                    linha.appendChild(tdId);
+                    linha.appendChild(tdIdentificacao);
                     linha.appendChild(tdStatus);
                     linha.appendChild(tdAcao);
                     
