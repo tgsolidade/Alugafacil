@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assinatura de Contrato</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         body {
@@ -39,6 +41,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            flex-direction: column;
         }
         iframe {
             width: 100%;
@@ -47,9 +50,13 @@
         }
         .erro-msg {
             color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
             text-align: center;
             font-weight: bold;
             padding: 20px;
+            border-radius: 4px;
+            word-wrap: break-word; /* Garante que o texto de erro não quebre a tela */
         }
         .form-group {
             margin-bottom: 20px;
@@ -73,7 +80,6 @@
             margin-top: 5px;
             width: 100%;
         }
-        
         .camera-container {
             width: 100%;
             border: 2px solid #ccc;
@@ -114,7 +120,6 @@
         .btn-camera-cnh {
             background-color: #fd7e14;
         }
-
         .canvas-container {
             border: 2px dashed #ccc;
             border-radius: 4px;
@@ -158,6 +163,10 @@
             font-weight: bold;
             margin-top: 15px;
         }
+        #buscandoDoc {
+            font-weight: bold;
+            color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -168,16 +177,16 @@
 
     <div class="container">
         
-        <div id="mensagemErro" class="erro-msg" style="display: none;">
-            ⚠️ Link de contrato inválido ou expirado.
+        <div id="mensagemErro" class="erro-msg" style="display: none;"></div>
+
+        <div class="pdf-container" id="loadingNuven">
+            <span id="buscandoDoc">Buscando documento na nuvem... ☁️</span>
         </div>
 
         <div id="areaAssinatura">
             <p>Leia atentamente o documento abaixo antes de prosseguir com a assinatura.</p>
             
-            <div class="pdf-container" id="pdfViewer">
-                Carregando documento...
-            </div>
+            <div class="pdf-container" id="pdfViewer"></div>
 
             <h3>Dados para Validação</h3>
 
@@ -226,35 +235,75 @@
     </div>
 
     <script>
+        // ==========================================
+        // SUAS CHAVES DO FIREBASE
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAY4YPwEixyQy38GZTG3i4y9Ri3j0uNJ3A",
+            authDomain: "asscontrato-6b307.firebaseapp.com",
+            databaseURL: "https://asscontrato-6b307-default-rtdb.firebaseio.com", 
+            projectId: "asscontrato-6b307",
+            storageBucket: "asscontrato-6b307.firebasestorage.app",
+            messagingSenderId: "34485243367",
+            appId: "1:34485243367:web:401a10d9c756e15ab38142",
+            measurementId: "G-BPT7ZT6QT2"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        // ==========================================
+
         let contratoOriginalBase64 = "";
+
+        // FUNÇÃO DE DIAGNÓSTICO DE ERRO APRIMORADA
+        function exibirErroDetalhado(mensagem) {
+            document.getElementById('loadingNuven').style.display = 'none';
+            document.getElementById('areaAssinatura').style.display = 'none';
+            const msgBox = document.getElementById('mensagemErro');
+            msgBox.innerHTML = "⚠️ ERRO TÉCNICO:<br><br>" + mensagem;
+            msgBox.style.display = 'block';
+        }
 
         window.onload = function() {
             const parametrosDaUrl = new URLSearchParams(window.location.search);
             const idContrato = parametrosDaUrl.get('doc');
 
             if (!idContrato) {
-                mostrarErro();
+                exibirErroDetalhado("O link está incompleto. Falta o ID do contrato na URL.");
                 return;
             }
 
-            contratoOriginalBase64 = localStorage.getItem('contrato_' + idContrato);
+            try {
+                // Tenta buscar no Firebase
+                database.ref('contratos/' + idContrato).once('value').then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const dadosDoBanco = snapshot.val();
+                        
+                        // Verifica se o PDF veio vazio
+                        if (!dadosDoBanco.pdf) {
+                            exibirErroDetalhado("O contrato foi encontrado na nuvem, mas o arquivo de PDF está vazio ou corrompido.");
+                            return;
+                        }
 
-            if (contratoOriginalBase64) {
-                const pdfContainer = document.getElementById('pdfViewer');
-                pdfContainer.innerHTML = `<iframe src="${contratoOriginalBase64}#toolbar=0" title="Contrato PDF"></iframe>`;
-                document.getElementById('areaAssinatura').style.display = 'block';
-                
-                setTimeout(resizeCanvas, 100); 
-                iniciarCamera();
-            } else {
-                mostrarErro();
+                        contratoOriginalBase64 = dadosDoBanco.pdf;
+                        
+                        document.getElementById('loadingNuven').style.display = 'none';
+                        const pdfContainer = document.getElementById('pdfViewer');
+                        pdfContainer.innerHTML = `<iframe src="${contratoOriginalBase64}#toolbar=0" title="Contrato PDF"></iframe>`;
+                        document.getElementById('areaAssinatura').style.display = 'block';
+                        
+                        setTimeout(resizeCanvas, 100); 
+                        iniciarCamera();
+                    } else {
+                        exibirErroDetalhado("O documento ID '" + idContrato + "' não foi encontrado no Banco de Dados. Verifique se o envio (upload) foi concluído com sucesso.");
+                    }
+                }).catch((erro) => {
+                    console.error("Erro no Firebase:", erro);
+                    exibirErroDetalhado("Erro ao conectar com a nuvem do Firebase. Motivo: " + erro.message);
+                });
+            } catch (e) {
+                exibirErroDetalhado("Erro interno de execução do código: " + e.message);
             }
         };
-
-        function mostrarErro() {
-            document.getElementById('mensagemErro').style.display = 'block';
-            document.getElementById('areaAssinatura').style.display = 'none';
-        }
 
         const video = document.getElementById('videoSelfie');
         const canvasCamera = document.getElementById('canvasSelfie');
@@ -313,11 +362,9 @@
         function tirarSelfieNormal() {
             if (!streamCamera) return;
             selfieNormalBase64 = capturarFrame();
-            
             imgSelfieNormal.src = selfieNormalBase64;
             previewArea.style.display = 'flex';
             imgSelfieNormal.style.display = 'block';
-            
             btnTirarNormal.style.display = 'none';
             checarCameraEncerrada();
         }
@@ -325,24 +372,18 @@
         function tirarSelfieCNH() {
             if (!streamCamera) return;
             selfieCNHBase64 = capturarFrame();
-            
             imgSelfieCNH.src = selfieCNHBase64;
             previewArea.style.display = 'flex';
             imgSelfieCNH.style.display = 'block';
-            
             btnTirarCNH.style.display = 'none';
             checarCameraEncerrada();
         }
 
-        function reiniciarCamera() {
-            iniciarCamera();
-        }
+        function reiniciarCamera() { iniciarCamera(); }
 
         const canvas = document.getElementById('signaturePad');
         const ctx = canvas.getContext('2d');
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
+        let isDrawing = false; let lastX = 0; let lastY = 0;
 
         function resizeCanvas() {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -352,23 +393,17 @@
         }
 
         function getCoordinates(e) {
-            if (e.touches && e.touches.length > 0) {
-                return { x: e.touches[0].clientX - canvas.getBoundingClientRect().left, y: e.touches[0].clientY - canvas.getBoundingClientRect().top };
-            }
+            if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX - canvas.getBoundingClientRect().left, y: e.touches[0].clientY - canvas.getBoundingClientRect().top };
             return { x: e.clientX - canvas.getBoundingClientRect().left, y: e.clientY - canvas.getBoundingClientRect().top };
         }
 
         function startDrawing(e) { isDrawing = true; const coords = getCoordinates(e); lastX = coords.x; lastY = coords.y; }
-        
         function draw(e) {
-            if (!isDrawing) return;
-            e.preventDefault(); 
-            const coords = getCoordinates(e);
+            if (!isDrawing) return; e.preventDefault(); const coords = getCoordinates(e);
             ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(coords.x, coords.y);
             ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
             lastX = coords.x; lastY = coords.y;
         }
-
         function stopDrawing() { isDrawing = false; }
 
         canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseout', stopDrawing);
@@ -390,25 +425,15 @@
             const docFrenteFile = document.getElementById('docFrente').files[0];
             const docVersoFile = document.getElementById('docVerso').files[0];
             
-            if (!docFrenteFile || !docVersoFile) {
-                alert("Por favor, anexe as fotos da frente e do verso da CNH.");
-                return;
-            }
-            if (!selfieNormalBase64 || !selfieCNHBase64) {
-                alert("Por favor, tire as DUAS selfies de segurança.");
-                return;
-            }
-            if (isCanvasBlank(canvas)) {
-                alert("Por favor, faça sua assinatura.");
-                return;
-            }
+            if (!docFrenteFile || !docVersoFile) { alert("Anexe as fotos da frente e verso da CNH."); return; }
+            if (!selfieNormalBase64 || !selfieCNHBase64) { alert("Tire as DUAS selfies de segurança."); return; }
+            if (isCanvasBlank(canvas)) { alert("Faça sua assinatura."); return; }
 
             document.getElementById('btnFinalizar').disabled = true;
             document.getElementById('loadingMsg').style.display = 'block';
 
             try {
                 const { PDFDocument } = PDFLib;
-
                 const pdfDataUri = contratoOriginalBase64;
                 const pdfDoc = await PDFDocument.load(pdfDataUri);
 
@@ -416,62 +441,39 @@
                 const imgSelfie1 = await pdfDoc.embedPng(selfieNormalBase64);
                 const imgSelfie2 = await pdfDoc.embedPng(selfieCNHBase64);
 
-                const frenteBuffer = await lerArquivoComoArrayBuffer(docFrenteFile);
-                const versoBuffer = await lerArquivoComoArrayBuffer(docVersoFile);
-                
                 const embedImagemFile = async (buffer) => {
                     try { return await pdfDoc.embedJpg(buffer); } 
                     catch (e) { return await pdfDoc.embedPng(buffer); }
                 };
 
-                const imgFrente = await embedImagemFile(frenteBuffer);
-                const imgVerso = await embedImagemFile(versoBuffer);
+                const imgFrente = await embedImagemFile(await lerArquivoComoArrayBuffer(docFrenteFile));
+                const imgVerso = await embedImagemFile(await lerArquivoComoArrayBuffer(docVersoFile));
 
                 const page = pdfDoc.addPage([595, 842]); 
-                
                 page.drawText('Anexos de Assinatura Digital (Validação KYC)', { x: 50, y: 800, size: 16 });
                 
-                // MÁGICA ACONTECE AQUI: scaleToFit mantém a proporção perfeita!
                 const maxDimAssinatura = assinaturaImage.scaleToFit(250, 80);
                 const maxDimFrente = imgFrente.scaleToFit(200, 140);
                 const maxDimVerso = imgVerso.scaleToFit(200, 140);
                 const maxDimSelfie1 = imgSelfie1.scaleToFit(150, 150);
                 const maxDimSelfie2 = imgSelfie2.scaleToFit(150, 150);
 
-                // --- Lado Esquerdo (Assinatura e CNH) ---
                 page.drawText('Assinatura Digital:', { x: 50, y: 760, size: 12 });
-                page.drawImage(assinaturaImage, { 
-                    x: 50, y: 755 - maxDimAssinatura.height, 
-                    width: maxDimAssinatura.width, height: maxDimAssinatura.height 
-                });
+                page.drawImage(assinaturaImage, { x: 50, y: 755 - maxDimAssinatura.height, width: maxDimAssinatura.width, height: maxDimAssinatura.height });
 
                 page.drawText('CNH (Frente):', { x: 50, y: 640, size: 12 });
-                page.drawImage(imgFrente, { 
-                    x: 50, y: 635 - maxDimFrente.height, 
-                    width: maxDimFrente.width, height: maxDimFrente.height 
-                });
+                page.drawImage(imgFrente, { x: 50, y: 635 - maxDimFrente.height, width: maxDimFrente.width, height: maxDimFrente.height });
 
                 page.drawText('CNH (Verso):', { x: 50, y: 470, size: 12 });
-                page.drawImage(imgVerso, { 
-                    x: 50, y: 465 - maxDimVerso.height, 
-                    width: maxDimVerso.width, height: maxDimVerso.height 
-                });
+                page.drawImage(imgVerso, { x: 50, y: 465 - maxDimVerso.height, width: maxDimVerso.width, height: maxDimVerso.height });
 
-                // --- Lado Direito (Selfies) ---
                 page.drawText('Selfie (Rosto):', { x: 350, y: 760, size: 12 });
-                page.drawImage(imgSelfie1, { 
-                    x: 350, y: 755 - maxDimSelfie1.height, 
-                    width: maxDimSelfie1.width, height: maxDimSelfie1.height 
-                });
+                page.drawImage(imgSelfie1, { x: 350, y: 755 - maxDimSelfie1.height, width: maxDimSelfie1.width, height: maxDimSelfie1.height });
 
                 page.drawText('Selfie segurando a CNH:', { x: 350, y: 580, size: 12 });
-                page.drawImage(imgSelfie2, { 
-                    x: 350, y: 575 - maxDimSelfie2.height, 
-                    width: maxDimSelfie2.width, height: maxDimSelfie2.height 
-                });
+                page.drawImage(imgSelfie2, { x: 350, y: 575 - maxDimSelfie2.height, width: maxDimSelfie2.width, height: maxDimSelfie2.height });
 
                 const pdfBytes = await pdfDoc.save();
-
                 const blob = new Blob([pdfBytes], { type: "application/pdf" });
                 const linkDownload = document.createElement('a');
                 linkDownload.href = URL.createObjectURL(blob);
@@ -480,12 +482,11 @@
 
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('btnFinalizar').disabled = false;
-
-                alert("✅ Documento assinado e baixado com sucesso!\n\nPor favor, envie o arquivo 'Contrato_Assinado.pdf' que acabou de baixar para o nosso WhatsApp para concluirmos.");
+                alert("✅ Documento assinado e baixado com sucesso!");
 
             } catch (erro) {
                 console.error("Erro ao gerar PDF:", erro);
-                alert("Ocorreu um erro ao gerar o documento. Tente novamente com fotos mais leves.");
+                exibirErroDetalhado("Ocorreu um erro ao colar as fotos no PDF: " + erro.message);
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('btnFinalizar').disabled = false;
             }
