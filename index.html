@@ -129,7 +129,7 @@
         <div class="section-divider"></div>
 
         <h2>Gestão de Contratos</h2>
-        <p>Veja os contratos gerados, baixe os assinados ou limpe o sistema.</p>
+        <p>Veja os últimos contratos gerados, baixe os assinados ou limpe o sistema.</p>
         <button class="btn btn-blue" onclick="carregarContratos()">🔄 Atualizar Lista de Contratos</button>
 
         <div style="overflow-x: auto;">
@@ -173,44 +173,54 @@
         let pdfBase64 = "";
         let nomeArquivoOriginal = "";
 
-        function mostrarNomeArquivo() {
-            const input = document.getElementById('pdfUpload');
-            const fileNameDisplay = document.getElementById('fileName');
-            const btnGerar = document.getElementById('btnGerar');
+        // Cache de elementos frequentemente acessados
+        const els = {
+            btnGerar: document.getElementById('btnGerar'),
+            loadingAdmin: document.getElementById('loadingAdmin'),
+            resultBox: document.getElementById('resultBox'),
+            generatedLink: document.getElementById('generatedLink'),
+            nomeCliente: document.getElementById('nomeCliente'),
+            pdfUpload: document.getElementById('pdfUpload'),
+            fileName: document.getElementById('fileName'),
+            corpoTabela: document.getElementById('corpoTabela')
+        };
 
-            if (input.files && input.files.length > 0) {
-                const arquivo = input.files[0];
+        function mostrarNomeArquivo() {
+            if (els.pdfUpload.files && els.pdfUpload.files.length > 0) {
+                const arquivo = els.pdfUpload.files[0];
                 if (arquivo.type !== 'application/pdf') {
                     alert('Erro: Selecione apenas arquivos em PDF.');
-                    input.value = ''; fileNameDisplay.textContent = 'Nenhum arquivo selecionado'; btnGerar.disabled = true; return;
+                    els.pdfUpload.value = ''; 
+                    els.fileName.textContent = 'Nenhum arquivo selecionado'; 
+                    els.btnGerar.disabled = true; 
+                    return;
                 }
                 nomeArquivoOriginal = arquivo.name; 
                 
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     pdfBase64 = e.target.result;
-                    fileNameDisplay.textContent = "Arquivo pronto: " + arquivo.name;
-                    btnGerar.disabled = false; 
+                    els.fileName.textContent = "Arquivo pronto: " + arquivo.name;
+                    els.btnGerar.disabled = false; 
                 };
                 reader.readAsDataURL(arquivo);
             }
         }
 
         function gerarLink() {
-            const nomeCliente = document.getElementById('nomeCliente').value.trim();
+            const nomeClienteVal = els.nomeCliente.value.trim();
             
-            if(!nomeCliente) {
+            if(!nomeClienteVal) {
                 alert("Por favor, preencha o Nome do Cliente.");
                 return;
             }
             if (!pdfBase64) return;
             
-            document.getElementById('btnGerar').disabled = true;
-            document.getElementById('loadingAdmin').style.display = 'block';
+            els.btnGerar.disabled = true;
+            els.loadingAdmin.style.display = 'block';
 
             const idUnico = Math.random().toString(36).substring(2, 10); 
-            
-            const nomeClienteFormatado = nomeCliente.replace(/\s+/g, '_');
+            const nomeClienteFormatado = nomeClienteVal.replace(/\s+/g, '_');
             const nomeFinalDoContrato = `${nomeClienteFormatado}_${nomeArquivoOriginal}`;
             
             database.ref('contratos/' + idUnico).set({
@@ -219,41 +229,39 @@
                 dataCriacao: new Date().toISOString(),
                 status: 'pendente' 
             }).then(() => {
-                document.getElementById('loadingAdmin').style.display = 'none';
+                els.loadingAdmin.style.display = 'none';
                 
                 const urlAtual = window.location.pathname;
                 const diretorioBase = urlAtual.substring(0, urlAtual.lastIndexOf('/')) + '/';
                 const baseUrl = window.location.origin + diretorioBase;
                 const linkFinal = baseUrl + "cliente.html?doc=" + idUnico;
 
-                document.getElementById('generatedLink').value = linkFinal;
-                document.getElementById('resultBox').style.display = 'block';
-                document.getElementById('btnGerar').disabled = false;
+                els.generatedLink.value = linkFinal;
+                els.resultBox.style.display = 'block';
                 
-                document.getElementById('nomeCliente').value = '';
-                document.getElementById('pdfUpload').value = '';
-                document.getElementById('fileName').textContent = 'Nenhum arquivo selecionado';
-                document.getElementById('btnGerar').disabled = true;
+                // Limpar campos
+                els.nomeCliente.value = '';
+                els.pdfUpload.value = '';
+                els.fileName.textContent = 'Nenhum arquivo selecionado';
                 pdfBase64 = "";
 
                 carregarContratos();
             }).catch((erro) => {
                 alert("Erro ao enviar. Verifique o console.");
-                document.getElementById('loadingAdmin').style.display = 'none';
-                document.getElementById('btnGerar').disabled = false;
+                console.error(erro);
+                els.loadingAdmin.style.display = 'none';
+                els.btnGerar.disabled = false;
             });
         }
 
         function copiarLink() {
-            const linkInput = document.getElementById('generatedLink');
-            linkInput.select(); document.execCommand("copy");
+            els.generatedLink.select(); 
+            document.execCommand("copy");
             alert("Link copiado para a área de transferência!");
         }
 
         function excluirContrato(idContrato) {
-            const confirmacao = confirm("Tem certeza que deseja excluir este contrato permanentemente? Esta ação não pode ser desfeita e liberará espaço no seu banco de dados.");
-            
-            if (confirmacao) {
+            if (confirm("Tem certeza que deseja excluir este contrato permanentemente? Esta ação liberará espaço no banco de dados.")) {
                 database.ref('contratos/' + idContrato).remove()
                 .then(() => {
                     alert("Contrato excluído com sucesso!");
@@ -266,9 +274,7 @@
             }
         }
 
-        // NOVA LÓGICA DE DOWNLOAD SEGURO
         function baixarPdfSeguro(base64String, nomeDoArquivo) {
-            // Converte o Base64 pesado num Blob para o navegador não travar o link
             fetch(base64String)
                 .then(res => res.blob())
                 .then(blob => {
@@ -289,25 +295,32 @@
         }
 
         function carregarContratos() {
-            const corpoTabela = document.getElementById('corpoTabela');
-            corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center;">Buscando contratos... ⏳</td></tr>';
+            els.corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center;">Buscando contratos... ⏳</td></tr>';
 
-            database.ref('contratos').once('value').then((snapshot) => {
+            // OTIMIZAÇÃO: Limita a busca aos últimos 50 contratos para não travar a memória com os Base64
+            database.ref('contratos').orderByKey().limitToLast(50).once('value').then((snapshot) => {
                 if (!snapshot.exists()) {
-                    corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum contrato gerado ainda.</td></tr>';
+                    els.corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum contrato gerado ainda.</td></tr>';
                     return;
                 }
 
-                const contratos = snapshot.val();
-                corpoTabela.innerHTML = ''; 
+                els.corpoTabela.innerHTML = ''; 
                 
-                const ids = Object.keys(contratos).reverse();
+                // OTIMIZAÇÃO: Usa DocumentFragment para injetar no DOM apenas uma vez
+                const fragment = document.createDocumentFragment();
+                const contratosArray = [];
 
-                ids.forEach(id => {
-                    const contrato = contratos[id];
-                    
+                snapshot.forEach((childSnapshot) => {
+                    contratosArray.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+
+                // Inverte para mostrar o mais recente primeiro
+                contratosArray.reverse().forEach(contrato => {
                     const dataObj = new Date(contrato.dataCriacao);
-                    const dataFormatada = dataObj.toLocaleDateString('pt-BR') + ' às ' + dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    const dataFormatada = `${dataObj.toLocaleDateString('pt-BR')} às ${dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
                     
                     const linha = document.createElement('tr');
                     
@@ -315,62 +328,52 @@
                     tdData.textContent = dataFormatada;
                     
                     const tdIdentificacao = document.createElement('td');
-                    const nomeExibicao = contrato.nomeArquivo ? contrato.nomeArquivo : `Contrato ID: ${id}`;
-                    tdIdentificacao.innerHTML = `<strong>${nomeExibicao}</strong><br><small style="color:#888;">ID: ${id}</small>`;
+                    const nomeExibicao = contrato.nomeArquivo ? contrato.nomeArquivo : `Contrato ID: ${contrato.id}`;
+                    tdIdentificacao.innerHTML = `<strong>${nomeExibicao}</strong><br><small style="color:#888;">ID: ${contrato.id}</small>`;
                     
                     const tdStatus = document.createElement('td');
-                    if(contrato.status === 'assinado') {
-                        tdStatus.innerHTML = '<span class="status-assinado">Assinado ✅</span>';
-                    } else {
-                        tdStatus.innerHTML = '<span class="status-pendente">Aguardando ⏳</span>';
-                    }
+                    tdStatus.innerHTML = contrato.status === 'assinado' 
+                        ? '<span class="status-assinado">Assinado ✅</span>' 
+                        : '<span class="status-pendente">Aguardando ⏳</span>';
 
                     const tdAcao = document.createElement('td');
                     const divAcao = document.createElement('div');
                     divAcao.className = 'acao-container';
 
                     if(contrato.status === 'assinado' && contrato.pdfAssinado) {
-                        const btnDownload = document.createElement('button'); // Mudamos de <a> para <button>
-                        
-                        let nomeDownloadBase = contrato.nomeArquivo ? contrato.nomeArquivo : `Contrato_${id}.pdf`;
+                        const btnDownload = document.createElement('button');
+                        let nomeDownloadBase = contrato.nomeArquivo || `Contrato_${contrato.id}.pdf`;
                         if(nomeDownloadBase.toLowerCase().endsWith('.pdf')) {
                             nomeDownloadBase = nomeDownloadBase.substring(0, nomeDownloadBase.length - 4);
                         }
-                        const nomeFinalDownload = `${nomeDownloadBase}_assinado.pdf`;
                         
                         btnDownload.className = 'btn-download';
                         btnDownload.textContent = '📥 Baixar PDF';
-                        // Aciona a nova função de download seguro
-                        btnDownload.onclick = function() { baixarPdfSeguro(contrato.pdfAssinado, nomeFinalDownload); };
-                        
+                        btnDownload.onclick = () => baixarPdfSeguro(contrato.pdfAssinado, `${nomeDownloadBase}_assinado.pdf`);
                         divAcao.appendChild(btnDownload);
                     } else {
                         const spanAguardando = document.createElement('span');
                         spanAguardando.textContent = 'Aguardando... ';
-                        spanAguardando.style.color = '#999';
-                        spanAguardando.style.fontSize = '12px';
-                        spanAguardando.style.marginRight = '10px';
+                        spanAguardando.style.cssText = 'color: #999; font-size: 12px; margin-right: 10px;';
                         divAcao.appendChild(spanAguardando);
                     }
 
                     const btnExcluir = document.createElement('button');
                     btnExcluir.className = 'btn-excluir';
                     btnExcluir.textContent = '🗑️ Excluir';
-                    btnExcluir.onclick = function() { excluirContrato(id); };
+                    btnExcluir.onclick = () => excluirContrato(contrato.id);
                     divAcao.appendChild(btnExcluir);
 
                     tdAcao.appendChild(divAcao);
-
-                    linha.appendChild(tdData);
-                    linha.appendChild(tdIdentificacao);
-                    linha.appendChild(tdStatus);
-                    linha.appendChild(tdAcao);
-                    
-                    corpoTabela.appendChild(linha);
+                    linha.append(tdData, tdIdentificacao, tdStatus, tdAcao);
+                    fragment.appendChild(linha);
                 });
 
+                // Adiciona tudo de uma vez ao DOM
+                els.corpoTabela.appendChild(fragment);
+
             }).catch((erro) => {
-                corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Erro ao buscar contratos.</td></tr>';
+                els.corpoTabela.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Erro ao buscar contratos.</td></tr>';
                 console.error(erro);
             });
         }
