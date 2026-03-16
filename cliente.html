@@ -11,7 +11,16 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
         .header { background-color: #28a745; color: white; padding: 20px; text-align: center; }
-        .header h2 { margin: 5px 0; }
+        
+        /* Ajuste da Logo na tela do cliente */
+        .logo-empresa {
+            max-height: 80px; 
+            width: auto;
+            margin-bottom: 10px;
+            border-radius: 8px; 
+        }
+
+        .header h2 { margin: 5px 0; font-size: 22px; }
         .header p { margin: 0; font-size: 14px; opacity: 0.9; }
         .container { max-width: 600px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-grow: 1; width: 90%; box-sizing: border-box; }
         .nome-contrato-destaque { text-align: center; color: #0056b3; margin-top: 0; margin-bottom: 20px; font-size: 18px; word-break: break-all;}
@@ -30,7 +39,7 @@
         .btn-camera-cnh { background-color: #fd7e14; }
         .canvas-container { border: 2px dashed #ccc; border-radius: 4px; margin-top: 10px; background: #fafafa; }
         #signaturePad { width: 100%; height: 200px; touch-action: none; }
-        .btn { width: 100%; padding: 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+        .btn { width: 100%; padding: 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; box-sizing: border-box; }
         .btn:disabled { background-color: #6c757d; cursor: not-allowed; }
         .btn-clear { background-color: #dc3545; margin-top: 5px; padding: 10px; }
         #areaAssinatura { display: none; }
@@ -42,7 +51,7 @@
 <body>
 
     <div class="header">
-        <img src="logo.jpeg" alt="Logo Aluga Fácil" style="max-width: 150px; margin-bottom: 10px;">
+        <img src="logo.jpeg" alt="Logo Aluga Fácil" class="logo-empresa">
         <h2>Aluga Fácil</h2>
         <p>Revisão e Assinatura de Contrato</p>
     </div>
