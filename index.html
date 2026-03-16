@@ -44,6 +44,16 @@
         }
         #btnSair:hover { background-color: #c82333; }
 
+        /* Novo estilo para mostrar quem está logado */
+        #userEmailDisplay {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            font-size: 12px;
+            color: #ffeb3b; /* Amarelinho para destacar no azul */
+            display: none;
+        }
+
         .container {
             background: #fff;
             padding: 30px;
@@ -119,6 +129,7 @@
         <h1>Aluga Fácil</h1>
         <p>Painel de Administração</p>
         <button id="btnSair" onclick="fazerLogout()">Sair</button>
+        <span id="userEmailDisplay"></span>
     </div>
 
     <div class="container" id="loginContainer">
@@ -129,7 +140,7 @@
 
         <div class="form-group">
             <label>E-mail</label>
-            <input type="text" id="emailLogin" placeholder="admin@alugafacil.com">
+            <input type="text" id="emailLogin" placeholder="douglasrenan2912@gmail.com">
         </div>
         <div class="form-group">
             <label>Senha</label>
@@ -214,17 +225,24 @@
         const loginContainer = document.getElementById('loginContainer');
         const adminContainer = document.getElementById('adminContainer');
         const btnSair = document.getElementById('btnSair');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
 
         auth.onAuthStateChanged((user) => {
             if (user) {
                 loginContainer.style.display = 'none';
                 adminContainer.style.display = 'block';
                 btnSair.style.display = 'block';
+                
+                // Mostra o e-mail de quem está logado
+                userEmailDisplay.textContent = "Logado como: " + user.email;
+                userEmailDisplay.style.display = 'block';
+                
                 carregarContratos(); 
             } else {
                 loginContainer.style.display = 'block';
                 adminContainer.style.display = 'none';
                 btnSair.style.display = 'none';
+                userEmailDisplay.style.display = 'none';
             }
         });
 
@@ -336,6 +354,7 @@
                 els.nomeCliente.value = '';
                 els.pdfUpload.value = '';
                 els.fileName.textContent = 'Nenhum arquivo selecionado';
+                els.btnGerar.disabled = true;
                 pdfBase64 = "";
 
                 carregarContratos();
