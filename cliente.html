@@ -42,6 +42,7 @@
 <body>
 
     <div class="header">
+        <img src="logo.jpeg" alt="Logo Aluga Fácil" style="max-width: 150px; margin-bottom: 10px;">
         <h2>Aluga Fácil</h2>
         <p>Revisão e Assinatura de Contrato</p>
     </div>
@@ -103,7 +104,7 @@
 
         let contratoOriginalBase64 = "";
         let idContratoGlobal = "";
-        let nomeArquivoGlobal = "Contrato.pdf"; // Nome padrão
+        let nomeArquivoGlobal = "Contrato.pdf"; 
 
         function exibirErroDetalhado(mensagem) {
             document.getElementById('loadingNuven').style.display = 'none';
@@ -132,11 +133,9 @@
 
                         contratoOriginalBase64 = dadosDoBanco.pdf;
                         
-                        // Resgata o nome bonito que definimos no painel admin
                         if (dadosDoBanco.nomeArquivo) {
                             nomeArquivoGlobal = dadosDoBanco.nomeArquivo;
                         }
-                        // Mostra o nome do contrato para o cliente
                         document.getElementById('nomeContratoDisplay').textContent = "📄 " + nomeArquivoGlobal;
 
                         document.getElementById('loadingNuven').style.display = 'none';
@@ -238,7 +237,6 @@
                     pdfAssinado: pdfBytesAssinado
                 });
 
-                // Tira o .pdf do nome original para colocar o _assinado
                 let nomeDownloadBase = nomeArquivoGlobal;
                 if(nomeDownloadBase.toLowerCase().endsWith('.pdf')) {
                     nomeDownloadBase = nomeDownloadBase.substring(0, nomeDownloadBase.length - 4);
