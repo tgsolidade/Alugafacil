@@ -26,7 +26,16 @@
             text-align: center;
             position: relative;
         }
-        .header h1 { margin: 5px 0; }
+        
+        /* Ajuste da Logo */
+        .logo-empresa {
+            max-height: 80px; /* Deixa a logo bem menor e mais elegante */
+            width: auto;
+            margin-bottom: 10px;
+            border-radius: 8px; /* Suaviza as bordas caso a imagem seja quadrada */
+        }
+
+        .header h1 { margin: 5px 0; font-size: 24px; }
         .header p { margin: 0; font-size: 14px; opacity: 0.9; }
         
         #btnSair {
@@ -44,12 +53,15 @@
         }
         #btnSair:hover { background-color: #c82333; }
 
+        /* Novo visual para o e-mail logado (estilo pílula) */
         #userEmailDisplay {
-            position: absolute;
-            top: 60px;
-            right: 20px;
+            display: inline-block;
+            margin-top: 15px;
             font-size: 12px;
-            color: #ffeb3b;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.2); /* Fundo escuro transparente */
+            padding: 6px 12px;
+            border-radius: 20px;
             display: none;
         }
 
@@ -60,6 +72,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             width: 90%;
             margin: 40px auto;
+            box-sizing: border-box;
         }
 
         #loginContainer { max-width: 400px; }
@@ -80,10 +93,10 @@
             display: inline-block; padding: 10px 20px; background-color: #0056b3;
             color: white; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px;
         }
-        #fileName { display: block; margin-top: 10px; font-style: italic; color: #666; }
+        #fileName { display: block; margin-top: 10px; font-style: italic; color: #666; word-wrap: break-word; }
         .btn {
             width: 100%; padding: 15px; background-color: #28a745; color: white;
-            border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;
+            border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; box-sizing: border-box;
         }
         .btn:hover { background-color: #218838; }
         .btn:disabled { background-color: #ccc; cursor: not-allowed; }
@@ -124,11 +137,11 @@
 <body>
 
     <div class="header">
-        <img src="logo.jpeg" alt="Logo Aluga Fácil" style="max-width: 150px; margin-bottom: 10px;">
+        <button id="btnSair" onclick="fazerLogout()">Sair</button>
+        <img src="logo.jpeg" alt="Logo Aluga Fácil" class="logo-empresa">
         <h1>Aluga Fácil</h1>
         <p>Painel de Administração</p>
-        <button id="btnSair" onclick="fazerLogout()">Sair</button>
-        <span id="userEmailDisplay"></span>
+        <div id="userEmailDisplay"></div>
     </div>
 
     <div class="container" id="loginContainer">
@@ -226,7 +239,6 @@
         const btnSair = document.getElementById('btnSair');
         const userEmailDisplay = document.getElementById('userEmailDisplay');
 
-        // Carrega o e-mail salvo na memória ao abrir a página
         window.addEventListener('DOMContentLoaded', () => {
             const emailSalvo = localStorage.getItem('alugaFacil_email');
             if(emailSalvo) {
@@ -238,10 +250,10 @@
             if (user) {
                 loginContainer.style.display = 'none';
                 adminContainer.style.display = 'block';
-                btnSair.style.display = 'block';
+                btnSair.style.display = 'inline-block';
                 
                 userEmailDisplay.textContent = "Logado como: " + user.email;
-                userEmailDisplay.style.display = 'block';
+                userEmailDisplay.style.display = 'inline-block';
                 
                 carregarContratos(); 
             } else {
@@ -269,9 +281,7 @@
 
             auth.signInWithEmailAndPassword(email, senha)
                 .then((userCredential) => {
-                    // Salva o e-mail na memória do navegador para a próxima vez
                     localStorage.setItem('alugaFacil_email', email);
-                    
                     msgErro.style.display = 'none';
                     btnEntrar.textContent = "Entrar no Sistema";
                     btnEntrar.disabled = false;
